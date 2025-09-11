@@ -1,17 +1,13 @@
 
-
 import React, { useState } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
-import { Sale, Client } from '../types';
+import { Sale, Client, Product } from '../types';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
-// FIX: Changed interface to a type intersection. An interface extending a class in TypeScript only
-// inherits public properties, not methods. A type intersection combines the class type with
-// the new property, ensuring all jsPDF methods are available.
 // Adiciona a definição do método autoTable à interface do jsPDF para o TypeScript
 type jsPDFWithAutoTable = jsPDF & {
   autoTable: (options: any) => jsPDF;
@@ -19,17 +15,8 @@ type jsPDFWithAutoTable = jsPDF & {
 
 const ReportsPage: React.FC = () => {
     const { t } = useTranslation();
-    const [dailyFile, setDailyFile] = useState<File | null>(null);
-    const [monthlyFile, setMonthlyFile] = useState<File | null>(null);
     const [salesStartDate, setSalesStartDate] = useState('');
     const [salesEndDate, setSalesEndDate] = useState('');
-
-    const handleDailyFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if(e.target.files) setDailyFile(e.target.files[0]);
-    }
-    const handleMonthlyFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if(e.target.files) setMonthlyFile(e.target.files[0]);
-    }
 
     const handleExportSalesPDF = () => {
         const filteredSales = MOCK_SALES.filter(sale => {
@@ -148,6 +135,128 @@ const ReportsPage: React.FC = () => {
 
         doc.save('lista_clientes.pdf');
     };
+    
+    const handleGenerateMonthlyReportPDF = () => {
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+
+        // Header
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+
+        doc.setFontSize(18);
+        doc.setTextColor(40);
+        doc.text(t('reports.monthlyReportTitle'), 14, 28);
+
+        const monthlyTotals: { [key: string]: number } = {};
+        MOCK_SALES.forEach(sale => {
+            const month = new Date(sale.date + 'T00:00:00').toLocaleString('default', { month: 'long', year: 'numeric' });
+            if (!monthlyTotals[month]) {
+                monthlyTotals[month] = 0;
+            }
+            monthlyTotals[month] += sale.total;
+        });
+
+        const head = [[t('reports.month'), t('reports.totalBilled')]];
+        const body = Object.entries(monthlyTotals).map(([month, total]) => [
+            month.charAt(0).toUpperCase() + month.slice(1),
+            `R$ ${total.toFixed(2)}`
+        ]);
+        
+        const totalYear = Object.values(monthlyTotals).reduce((sum, total) => sum + total, 0);
+        
+        doc.autoTable({
+            startY: 35,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [29, 78, 216] },
+            columnStyles: { 1: { halign: 'right' } },
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY || 0;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(
+            `${t('reports.totalAmount')}: R$ ${totalYear.toFixed(2)}`,
+            14,
+            finalY + 10
+        );
+
+        doc.save('relatorio_mensal.pdf');
+    };
+
+    const handleGenerateAnnualDeclarationPDF = () => {
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const { name: companyName, entrepreneur, cnpj } = MOCK_COMPANY;
+        const year = "2025"; // Assuming fixed year from mock data
+
+        let resaleRevenue = 0;
+        let industrializedRevenue = 0;
+        let serviceRevenue = 0;
+
+        MOCK_SALES.forEach(sale => {
+            if ('type' in sale.item) {
+                const product = sale.item as Product;
+                if (product.type === 'Regular') {
+                    resaleRevenue += sale.total;
+                } else if (product.type === 'Industrializado') {
+                    industrializedRevenue += sale.total;
+                }
+            } else {
+                serviceRevenue += sale.total;
+            }
+        });
+        
+        const totalGrossRevenue = resaleRevenue + industrializedRevenue + serviceRevenue;
+
+        // Header
+        doc.setFontSize(16);
+        doc.text(t('reports.annualDeclarationTitle'), doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
+        doc.setFontSize(12);
+        doc.text(`${t('reports.year')}: ${year}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
+
+        // Company Info
+        doc.setFontSize(10);
+        doc.text(`${t('company.companyName')}: ${companyName}`, 14, 35);
+        doc.text(`${t('company.cnpj')}: ${cnpj}`, 14, 41);
+        doc.text(`${t('company.entrepreneur')}: ${entrepreneur}`, 14, 47);
+
+        // Revenue Summary
+        doc.setFontSize(14);
+        doc.text(t('reports.annualSummary'), 14, 60);
+
+        const head = [[t('reports.revenueType'), t('reports.totalBilled')]];
+        const body = [
+            [t('reports.resaleRevenue'), `R$ ${resaleRevenue.toFixed(2)}`],
+            [t('reports.industrializedRevenue'), `R$ ${industrializedRevenue.toFixed(2)}`],
+            [t('reports.serviceRevenue'), `R$ ${serviceRevenue.toFixed(2)}`],
+        ];
+
+        doc.autoTable({
+            startY: 65,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { fillColor: [29, 78, 216], textColor: 255 },
+            columnStyles: { 1: { halign: 'right' } },
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY || 0;
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.autoTable({
+            startY: finalY,
+            body: [[t('reports.totalGrossRevenue'), `R$ ${totalGrossRevenue.toFixed(2)}`]],
+            theme: 'grid',
+            styles: { fontStyle: 'bold' },
+            columnStyles: { 1: { halign: 'right' } },
+        });
+
+        doc.save('declaracao_anual_mei.pdf');
+    };
+
 
     return (
         <div className="space-y-6">
@@ -180,28 +289,27 @@ const ReportsPage: React.FC = () => {
                             <Button onClick={handleExportClientsPDF}>{t('reports.exportPdf')}</Button>
                         </div>
                     </div>
-                </div>
-            </Card>
 
-            <Card title={t('reports.generateMonthly')}>
-                <p className="mb-2">{t('reports.monthlyDescription')}</p>
-                <div className="flex items-center space-x-4">
-                    <input type="file" multiple accept=".json" onChange={handleDailyFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
-                    <Button disabled={!dailyFile}>{t('reports.generateMonthlyButton')}</Button>
-                </div>
-            </Card>
+                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
 
-            <Card title={t('reports.generateAnnual')}>
-                <p className="mb-2">{t('reports.annualDescription')}</p>
-                 <div className="flex items-center space-x-4">
-                    <input type="file" multiple accept=".json" onChange={handleMonthlyFileChange} className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100" />
-                    <Button disabled={!monthlyFile}>{t('reports.generateAnnualButton')}</Button>
-                </div>
-            </Card>
+                    <div>
+                        <h4 className="font-semibold text-lg">{t('reports.generateMonthlyReport')}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.monthlyReportDescription')}</p>
+                        <div className="flex justify-start">
+                            <Button onClick={handleGenerateMonthlyReportPDF}>{t('reports.exportPdf')}</Button>
+                        </div>
+                    </div>
 
-            <Card title={t('reports.download')}>
-                <p>{t('reports.downloadDescription')}</p>
-                {/* Links to download reports would appear here */}
+                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                    
+                    <div>
+                        <h4 className="font-semibold text-lg">{t('reports.generateAnnualDeclaration')}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.annualDeclarationDescription')}</p>
+                        <div className="flex justify-start">
+                            <Button onClick={handleGenerateAnnualDeclarationPDF}>{t('reports.exportPdf')}</Button>
+                        </div>
+                    </div>
+                </div>
             </Card>
         </div>
     );

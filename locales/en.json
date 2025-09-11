@@ -1,3 +1,4 @@
+
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -212,26 +213,33 @@
     "saveSuccess": "Profile saved successfully!"
   },
   "reports": {
-    "generateMonthly": "Generate Monthly Report",
-    "monthlyDescription": "Add the daily JSON files to generate the consolidated monthly report.",
-    "generateMonthlyButton": "Generate Monthly Report",
-    "generateAnnual": "Generate Annual Declaration",
-    "annualDescription": "Add the monthly JSON files to generate the Annual MEI Declaration (DASN-SIMEI).",
-    "generateAnnualButton": "Generate Annual Declaration",
-    "download": "Download Generated Reports",
-    "downloadDescription": "Links to download the consolidated reports will be available here.",
-    "exportData": "Export Data",
-    "salesReport": "Sales Report",
-    "salesReportDescription": "Select a period to export the sales report in PDF format.",
+    "exportData": "Export Data & Reports",
+    "salesReport": "Sales Report by Period",
+    "salesReportDescription": "Select a period to export the detailed sales report in PDF format.",
     "clientList": "Client List",
     "clientListDescription": "Export a complete list of all registered clients in PDF format.",
-    "exportPdf": "Export to PDF",
+    "generateMonthlyReport": "Monthly Billing Report",
+    "monthlyReportDescription": "Generate a consolidated report with the total billing for each month of the year.",
+    "generateAnnualDeclaration": "Annual Declaration (DASN-SIMEI)",
+    "annualDeclarationDescription": "Generate the Simplified Annual Declaration for MEI with a summary of the year's revenue, broken down by type.",
+    "exportPdf": "Generate PDF",
     "salesReportTitle": "Sales Report",
     "clientListTitle": "Client List",
     "period": "Period",
     "to": "to",
     "allSales": "All Sales",
-    "totalAmount": "Total Amount"
+    "totalAmount": "Total Amount",
+    "monthlyReportTitle": "Monthly Billing Report",
+    "annualDeclarationTitle": "Simplified Annual Declaration for MEI (DASN-SIMEI)",
+    "year": "Calendar Year",
+    "annualSummary": "Annual Gross Revenue Summary",
+    "month": "Month",
+    "totalBilled": "Total Billed",
+    "revenueType": "Source of Revenue",
+    "resaleRevenue": "Resale of merchandise",
+    "industrializedRevenue": "Sale of industrialized products",
+    "serviceRevenue": "Provision of services",
+    "totalGrossRevenue": "Total Gross Revenue"
   },
   "settings": {
     "general": "General Settings",

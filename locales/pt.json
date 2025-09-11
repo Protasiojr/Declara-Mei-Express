@@ -1,3 +1,4 @@
+
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -212,26 +213,33 @@
     "saveSuccess": "Perfil salvo com sucesso!"
   },
   "reports": {
-    "generateMonthly": "Gerar Relatório Mensal",
-    "monthlyDescription": "Adicione os JSONs diários para gerar o relatório consolidado do mês.",
-    "generateMonthlyButton": "Gerar Relatório Mensal",
-    "generateAnnual": "Gerar Declaração Anual",
-    "annualDescription": "Adicione os JSONs mensais para gerar a Declaração Anual do MEI (DASN-SIMEI).",
-    "generateAnnualButton": "Gerar Declaração Anual",
-    "download": "Baixar Relatórios Gerados",
-    "downloadDescription": "Aqui ficarão disponíveis os links para download dos relatórios consolidados.",
-    "exportData": "Exportar Dados",
-    "salesReport": "Relatório de Vendas",
-    "salesReportDescription": "Selecione um período para exportar o relatório de vendas em formato PDF.",
+    "exportData": "Exportar Dados e Relatórios",
+    "salesReport": "Relatório de Vendas por Período",
+    "salesReportDescription": "Selecione um período para exportar o relatório detalhado de vendas em formato PDF.",
     "clientList": "Lista de Clientes",
     "clientListDescription": "Exporte uma lista completa de todos os clientes cadastrados em formato PDF.",
-    "exportPdf": "Exportar para PDF",
+    "generateMonthlyReport": "Relatório Mensal de Faturamento",
+    "monthlyReportDescription": "Gere um relatório consolidado com o faturamento total de cada mês do ano.",
+    "generateAnnualDeclaration": "Declaração Anual (DASN-SIMEI)",
+    "annualDeclarationDescription": "Gere a Declaração Anual Simplificada para o MEI com o resumo do faturamento do ano, separada por tipo de receita.",
+    "exportPdf": "Gerar PDF",
     "salesReportTitle": "Relatório de Vendas",
     "clientListTitle": "Lista de Clientes",
     "period": "Período",
     "to": "a",
     "allSales": "Todas as Vendas",
-    "totalAmount": "Valor Total"
+    "totalAmount": "Valor Total",
+    "monthlyReportTitle": "Relatório de Faturamento Mensal",
+    "annualDeclarationTitle": "Declaração Anual Simplificada para o MEI (DASN-SIMEI)",
+    "year": "Ano Calendário",
+    "annualSummary": "Resumo da Receita Bruta Anual",
+    "month": "Mês",
+    "totalBilled": "Total Faturado",
+    "revenueType": "Origem da Receita",
+    "resaleRevenue": "Revenda de mercadorias",
+    "industrializedRevenue": "Venda de produtos industrializados",
+    "serviceRevenue": "Prestação de serviços",
+    "totalGrossRevenue": "Receita Bruta Total"
   },
   "settings": {
     "general": "Configurações Gerais",
