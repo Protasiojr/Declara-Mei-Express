@@ -209,6 +209,8 @@
     "profileName": "Profile Name",
     "loginEmail": "Login (Email)",
     "profileType": "Profile Type",
+    "user": "User",
+    "admin": "Admin",
     "newPassword": "New Password",
     "saveSuccess": "Profile saved successfully!"
   },

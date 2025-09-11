@@ -16,7 +16,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
   
   if (!user) return null;
 
-  const [formData, setFormData] = useState({ name: user.name, newPassword: '' });
+  const [formData, setFormData] = useState({ name: user.name, newPassword: '', profileType: user.profileType });
   const [errors, setErrors] = useState({ name: '', newPassword: '' });
 
   const validate = () => {
@@ -37,7 +37,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-        setUser(prev => prev ? { ...prev, name: formData.name } : null);
+        setUser(prev => prev ? { ...prev, name: formData.name, profileType: formData.profileType } : null);
         // Here you would typically also handle the password change logic
         toast.success(t('profile.saveSuccess'));
         setErrors({ name: '', newPassword: '' });
@@ -47,6 +47,10 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({...prev, [name]: value }));
+  };
+
+  const handleProfileTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({...prev, profileType: e.target.value as 'Admin' | 'User' }));
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +69,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
       <Card title={t('profile.profileInfo')}>
         <div className="flex flex-col items-center sm:flex-row sm:items-start space-y-4 sm:space-y-0 sm:space-x-6">
             <div className="flex flex-col items-center">
-                <img src={user.profilePicture} alt="Profile" className="w-32 h-32 rounded-full object-cover mb-4" />
+                <img src={user.profilePicture} alt="Profile" className="w-32 h-32 object-cover rounded-full mb-4" />
                 <label htmlFor="profile-pic-upload" className="cursor-pointer bg-primary-600 text-white px-4 py-2 rounded-md hover:bg-primary-700">
                     {t('profile.changeImage')}
                 </label>
@@ -75,7 +79,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
             <div>
               <label className="block text-sm font-medium">{t('profile.profileName')}</label>
               <input type="text" name="name" value={formData.name} onChange={handleInputChange} 
-                     className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
+                     className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
             <div>
@@ -83,13 +87,36 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
               <input type="email" value={user.email} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 disabled:bg-gray-200 dark:disabled:bg-gray-600" />
             </div>
             <div>
-              <label className="block text-sm font-medium">{t('profile.profileType')}</label>
-              <input type="text" value={user.profileType} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 disabled:bg-gray-200 dark:disabled:bg-gray-600" />
+                <label className="block text-sm font-medium">{t('profile.profileType')}</label>
+                <div className="mt-2 flex items-center space-x-4">
+                    <label className="flex items-center">
+                        <input
+                            type="radio"
+                            name="profileType"
+                            value="User"
+                            checked={formData.profileType === 'User'}
+                            onChange={handleProfileTypeChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('profile.user')}</span>
+                    </label>
+                    <label className="flex items-center">
+                        <input
+                            type="radio"
+                            name="profileType"
+                            value="Admin"
+                            checked={formData.profileType === 'Admin'}
+                            onChange={handleProfileTypeChange}
+                            className="h-4 w-4 text-primary-600 focus:ring-primary-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">{t('profile.admin')}</span>
+                    </label>
+                </div>
             </div>
             <div>
               <label className="block text-sm font-medium">{t('profile.newPassword')}</label>
               <input type="password" name="newPassword" placeholder="********" value={formData.newPassword} onChange={handleInputChange}
-                     className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.newPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
+                     className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white ${errors.newPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
                {errors.newPassword && <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>}
             </div>
             <div className="flex justify-end">
