@@ -75,21 +75,21 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
             <div>
               <label className="block text-sm font-medium">{t('profile.profileName')}</label>
               <input type="text" name="name" value={formData.name} onChange={handleInputChange} 
-                     className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
+                     className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.name ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium">{t('profile.loginEmail')}</label>
-              <input type="email" value={user.email} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 disabled:bg-gray-200 dark:disabled:bg-gray-600" />
+              <input type="email" value={user.email} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 disabled:bg-gray-200 dark:disabled:bg-gray-600" />
             </div>
             <div>
               <label className="block text-sm font-medium">{t('profile.profileType')}</label>
-              <input type="text" value={user.profileType} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm dark:bg-gray-700 disabled:bg-gray-200 dark:disabled:bg-gray-600" />
+              <input type="text" value={user.profileType} disabled className="mt-1 block w-full rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 disabled:bg-gray-200 dark:disabled:bg-gray-600" />
             </div>
             <div>
               <label className="block text-sm font-medium">{t('profile.newPassword')}</label>
               <input type="password" name="newPassword" placeholder="********" value={formData.newPassword} onChange={handleInputChange}
-                     className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.newPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
+                     className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.newPassword ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`} />
                {errors.newPassword && <p className="mt-1 text-sm text-red-600">{errors.newPassword}</p>}
             </div>
             <div className="flex justify-end">

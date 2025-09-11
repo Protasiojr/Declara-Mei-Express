@@ -366,15 +366,15 @@ const SalesPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
                         <div>
                             <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterStartDate')}</label>
-                            <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
+                            <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
                         </div>
                         <div>
                             <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterEndDate')}</label>
-                            <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
+                            <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
                         </div>
                         <div>
                             <label htmlFor="itemType" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterItemType')}</label>
-                            <select name="itemType" value={filters.itemType} onChange={handleFilterChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500">
+                            <select name="itemType" value={filters.itemType} onChange={handleFilterChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500">
                                 <option value="all">{t('sales.filterAllItems')}</option>
                                 <option value="product">{t('sales.filterProducts')}</option>
                                 <option value="service">{t('sales.filterServices')}</option>
@@ -438,7 +438,7 @@ const SalesPage: React.FC = () => {
                                 value={itemSearch}
                                 onChange={handleItemSearchChange}
                                 placeholder={t('sales.searchItemPlaceholder')}
-                                className={`block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.itemId && !formData.itemId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                                className={`block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.itemId && !formData.itemId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                             />
                             <Button type="button" variant="secondary" size="sm" onClick={() => handleOpenNewItemModal('product')}>{t('sales.registerNewProduct')}</Button>
                         </div>
@@ -455,12 +455,12 @@ const SalesPage: React.FC = () => {
                     </div>
                      <div>
                         <label className="block text-sm font-medium">{t('sales.quantity')}</label>
-                        <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.quantity ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                        <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.quantity ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                          {errors.quantity && <p className="text-sm text-red-500 mt-1">{errors.quantity}</p>}
                     </div>
                      <div>
                         <label className="block text-sm font-medium">{t('sales.date')}</label>
-                        <input type="date" name="date" value={formData.date} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                        <input type="date" name="date" value={formData.date} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                          {errors.date && <p className="text-sm text-red-500 mt-1">{errors.date}</p>}
                     </div>
                     <div className="relative">
@@ -478,7 +478,7 @@ const SalesPage: React.FC = () => {
                                         value={clientSearch}
                                         onChange={(e) => setClientSearch(e.target.value)}
                                         placeholder={t('sales.searchClientPlaceholder')}
-                                        className="block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                                        className="block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                                     />
                                     <Button type="button" variant="secondary" size="sm" onClick={() => setIsClientModalOpen(true)}>{t('sales.registerNewClient')}</Button>
                                 </div>
@@ -517,7 +517,7 @@ const SalesPage: React.FC = () => {
                             value={justification}
                             onChange={(e) => { setJustification(e.target.value); if(justificationError) setJustificationError(''); }}
                             rows={4}
-                            className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm dark:bg-gray-700 ${justificationError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                            className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm bg-gray-100 dark:bg-gray-700 ${justificationError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                             placeholder={t('common.justification')}
                         />
                         {justificationError && <p className="mt-1 text-sm text-red-600">{justificationError}</p>}
@@ -540,20 +540,20 @@ const SalesPage: React.FC = () => {
                     </div>
                     {clientFormData.clientType === 'Individual' ? (
                         <>
-                            <div><label className="block text-sm font-medium">{t('clients.fullName')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
-                            <div><label className="block text-sm font-medium">{t('clients.cpf')}</label><input type="text" name="cpf" value={clientFormData.cpf} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cpf && <p className="text-sm text-red-500 mt-1">{clientErrors.cpf}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.fullName')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.cpf')}</label><input type="text" name="cpf" value={clientFormData.cpf} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cpf && <p className="text-sm text-red-500 mt-1">{clientErrors.cpf}</p>}</div>
                         </>
                     ) : (
                         <>
-                            <div><label className="block text-sm font-medium">{t('clients.companyName')}</label><input type="text" name="companyName" value={clientFormData.companyName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.companyName && <p className="text-sm text-red-500 mt-1">{clientErrors.companyName}</p>}</div>
-                            <div><label className="block text-sm font-medium">{t('clients.tradeName')}</label><input type="text" name="tradeName" value={clientFormData.tradeName} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
-                            <div><label className="block text-sm font-medium">{t('clients.cnpj')}</label><input type="text" name="cnpj" value={clientFormData.cnpj} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cnpj && <p className="text-sm text-red-500 mt-1">{clientErrors.cnpj}</p>}</div>
-                            <div><label className="block text-sm font-medium">{t('clients.stateRegistration')}</label><input type="text" name="stateRegistration" value={clientFormData.stateRegistration} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
-                            <div><label className="block text-sm font-medium">{t('clients.contactPerson')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.companyName')}</label><input type="text" name="companyName" value={clientFormData.companyName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.companyName && <p className="text-sm text-red-500 mt-1">{clientErrors.companyName}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.tradeName')}</label><input type="text" name="tradeName" value={clientFormData.tradeName} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
+                            <div><label className="block text-sm font-medium">{t('clients.cnpj')}</label><input type="text" name="cnpj" value={clientFormData.cnpj} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cnpj && <p className="text-sm text-red-500 mt-1">{clientErrors.cnpj}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.stateRegistration')}</label><input type="text" name="stateRegistration" value={clientFormData.stateRegistration} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
+                            <div><label className="block text-sm font-medium">{t('clients.contactPerson')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
                         </>
                     )}
-                    <div><label className="block text-sm font-medium">{t('clients.address')}</label><input type="text" name="address" value={clientFormData.address} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.address && <p className="text-sm text-red-500 mt-1">{clientErrors.address}</p>}</div>
-                    <div><label className="block text-sm font-medium">{t('clients.phone')}</label><input type="text" name="phone" value={clientFormData.phone} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.phone && <p className="text-sm text-red-500 mt-1">{clientErrors.phone}</p>}</div>
+                    <div><label className="block text-sm font-medium">{t('clients.address')}</label><input type="text" name="address" value={clientFormData.address} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.address && <p className="text-sm text-red-500 mt-1">{clientErrors.address}</p>}</div>
+                    <div><label className="block text-sm font-medium">{t('clients.phone')}</label><input type="text" name="phone" value={clientFormData.phone} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.phone && <p className="text-sm text-red-500 mt-1">{clientErrors.phone}</p>}</div>
 
                     <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="secondary" onClick={() => setIsClientModalOpen(false)}>{t('common.cancel')}</Button>
@@ -567,18 +567,18 @@ const SalesPage: React.FC = () => {
                 <div className="space-y-4">
                     <div>
                         <label className="block text-sm font-medium">{t('sales.itemName')}</label>
-                        <input type="text" value={newItemFormData.name} onChange={(e) => setNewItemFormData(p => ({...p, name: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${newItemErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                        <input type="text" value={newItemFormData.name} onChange={(e) => setNewItemFormData(p => ({...p, name: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
                         {newItemErrors.name && <p className="text-sm text-red-500 mt-1">{newItemErrors.name}</p>}
                     </div>
                      <div>
                         <label className="block text-sm font-medium">{t('sales.itemPrice')}</label>
-                        <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                        <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
                         {newItemErrors.price && <p className="text-sm text-red-500 mt-1">{newItemErrors.price}</p>}
                     </div>
                     {newItemType === 'product' && (
                         <div>
                              <label className="block text-sm font-medium">{t('sales.itemType')}</label>
-                             <select value={newItemFormData.type} onChange={(e) => setNewItemFormData(p => ({...p, type: e.target.value as 'Regular' | 'Industrializado'}))} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                             <select value={newItemFormData.type} onChange={(e) => setNewItemFormData(p => ({...p, type: e.target.value as 'Regular' | 'Industrializado'}))} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600">
                                 <option value="Regular">{t('products.typeRegular')}</option>
                                 <option value="Industrializado">{t('products.typeIndustrialized')}</option>
                             </select>

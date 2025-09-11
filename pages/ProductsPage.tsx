@@ -165,19 +165,19 @@ const ProductsPage: React.FC = () => {
                     <div>
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('products.productName')}</label>
                         <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange}
-                               className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500'}`} />
+                               className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500'}`} />
                         {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
                     </div>
                     <div>
                         <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('products.price')}</label>
                         <input type="number" name="price" id="price" value={formData.price} onChange={handleInputChange}
-                               className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.price ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500'}`} />
+                               className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.price ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500'}`} />
                         {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price}</p>}
                     </div>
                     <div>
                         <label htmlFor="type" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('products.type')}</label>
                         <select name="type" id="type" value={formData.type} onChange={handleInputChange}
-                                className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500">
+                                className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500">
                             <option value="Regular">{t('products.typeRegular')}</option>
                             <option value="Industrializado">{t('products.typeIndustrialized')}</option>
                         </select>

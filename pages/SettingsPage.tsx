@@ -26,7 +26,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ handleLogout }) => {
                 <p className="text-sm text-gray-500 mb-2">{t('settings.limitDescription')}</p>
                 <div className="flex items-center space-x-2">
                     <span className="text-lg">R$</span>
-                    <input type="number" defaultValue="81000" className="mt-1 block w-full max-w-xs rounded-md border-gray-300 shadow-sm dark:bg-gray-700" disabled/>
+                    <input type="number" defaultValue="81000" className="mt-1 block w-full max-w-xs rounded-md border-gray-300 shadow-sm bg-gray-100 dark:bg-gray-700 disabled:bg-gray-200" disabled/>
                 </div>
             </div>
             <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>

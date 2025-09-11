@@ -182,12 +182,12 @@ const ClientPage: React.FC = () => {
                         <>
                             <div>
                                 <label className="block text-sm font-medium">{t('clients.fullName')}</label>
-                                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                                 {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium">{t('clients.cpf')}</label>
-                                <input type="text" name="cpf" value={formData.cpf} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                                <input type="text" name="cpf" value={formData.cpf} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                                 {errors.cpf && <p className="text-sm text-red-500 mt-1">{errors.cpf}</p>}
                             </div>
                         </>
@@ -195,25 +195,25 @@ const ClientPage: React.FC = () => {
                         <>
                             <div>
                                 <label className="block text-sm font-medium">{t('clients.companyName')}</label>
-                                <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                                <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                                 {errors.companyName && <p className="text-sm text-red-500 mt-1">{errors.companyName}</p>}
                             </div>
                              <div>
                                 <label className="block text-sm font-medium">{t('clients.tradeName')}</label>
-                                <input type="text" name="tradeName" value={formData.tradeName} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
+                                <input type="text" name="tradeName" value={formData.tradeName} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium">{t('clients.cnpj')}</label>
-                                <input type="text" name="cnpj" value={formData.cnpj} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                                <input type="text" name="cnpj" value={formData.cnpj} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                                 {errors.cnpj && <p className="text-sm text-red-500 mt-1">{errors.cnpj}</p>}
                             </div>
                              <div>
                                 <label className="block text-sm font-medium">{t('clients.stateRegistration')}</label>
-                                <input type="text" name="stateRegistration" value={formData.stateRegistration} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
+                                <input type="text" name="stateRegistration" value={formData.stateRegistration} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium">{t('clients.contactPerson')}</label>
-                                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                                 {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
                             </div>
                         </>
@@ -221,12 +221,12 @@ const ClientPage: React.FC = () => {
 
                     <div>
                         <label className="block text-sm font-medium">{t('clients.address')}</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                        <input type="text" name="address" value={formData.address} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                          {errors.address && <p className="text-sm text-red-500 mt-1">{errors.address}</p>}
                     </div>
                      <div>
                         <label className="block text-sm font-medium">{t('clients.phone')}</label>
-                        <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                        <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                          {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
                     </div>
                     
@@ -248,7 +248,7 @@ const ClientPage: React.FC = () => {
                                 if(justificationError) setJustificationError('');
                             }}
                             rows={4}
-                            className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm dark:bg-gray-700 ${justificationError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                            className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm bg-gray-100 dark:bg-gray-700 ${justificationError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                             placeholder={t('common.justification')}
                         />
                         {justificationError && <p className="mt-1 text-sm text-red-600">{justificationError}</p>}

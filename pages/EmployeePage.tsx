@@ -116,7 +116,7 @@ const EmployeePage: React.FC = () => {
                 value={formData[name] || ''}
                 onChange={handleInputChange}
                 rows={type === 'textarea' ? 3 : undefined}
-                className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm dark:bg-gray-700 ${errors[name] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500'}`}
+                className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm bg-gray-100 dark:bg-gray-700 ${errors[name] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500'}`}
                 required={type !== 'date'}
             />
             {errors[name] && <p className="mt-1 text-sm text-red-600">{errors[name]}</p>}

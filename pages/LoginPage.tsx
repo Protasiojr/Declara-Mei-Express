@@ -69,7 +69,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, theme, toggleTheme }) =>
                             </label>
                             <div className="mt-1">
                                 <input id="email" name="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                                       className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm dark:bg-gray-700 dark:placeholder-gray-400 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`}/>
+                                       className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 ${errors.email ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`}/>
                                 {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
                             </div>
                         </div>
@@ -81,7 +81,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLogin, theme, toggleTheme }) =>
                             </label>
                             <div className="mt-1">
                                 <input id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                                       className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm dark:bg-gray-700 dark:placeholder-gray-400 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`}/>
+                                       className={`appearance-none block w-full px-3 py-2 border rounded-md shadow-sm placeholder-gray-400 focus:outline-none sm:text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white dark:placeholder-gray-400 ${errors.password ? 'border-red-500 focus:ring-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500'}`}/>
                                 {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                             </div>
                         </div>
