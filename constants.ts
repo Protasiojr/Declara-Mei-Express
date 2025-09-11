@@ -1,5 +1,4 @@
-
-import { User, Company, Employee, Product, Service, Sale, Client } from './types';
+import { User, Company, Employee, Product, Service, Sale, Client, ServiceProvision } from './types';
 
 export const MOCK_USER: User = {
   name: 'Usuário Padrão',
@@ -30,43 +29,36 @@ export const MOCK_EMPLOYEE: Employee = {
   address: 'Avenida Principal, 456, São Paulo, SP',
   phone: '(11) 98765-4321',
   registrationData: 'PIS: 123.45678.90-1, CTPS: 1234567-0001 SP',
+  vacationStart: '2025-01-02',
+  vacationEnd: '2025-01-31'
 };
 
 export const MOCK_CLIENTS: Client[] = [
-  { 
-    id: 1, 
-    clientType: 'Individual',
-    fullName: 'Carlos Pereira', 
-    address: 'Rua das Palmeiras, 789, Rio de Janeiro, RJ', 
-    phone: '(21) 99876-5432', 
-    cpf: '123.456.789-00' 
-  },
-  { 
-    id: 2, 
-    clientType: 'Company',
-    companyName: 'ABC Logística Ltda',
-    tradeName: 'ABC Log',
-    cnpj: '98.765.432/0001-11',
-    stateRegistration: 'Isento',
-    fullName: 'Ana Souza', // Contact person
-    address: 'Avenida das Nações, 101, Brasília, DF', 
-    phone: '(61) 98765-1234'
-  },
+    { id: 1, clientType: 'Individual', fullName: 'Carlos Pereira', address: 'Rua das Pedras, 789, Rio de Janeiro, RJ', phone: '(21) 99887-6543', cpf: '123.456.789-00' },
+    { id: 2, clientType: 'Company', fullName: 'Ana Souza', address: 'Alameda dos Anjos, 101, Belo Horizonte, MG', phone: '(31) 98765-1234', companyName: 'Construções ABC Ltda.', tradeName: 'ABC Construções', cnpj: '98.765.432/0001-11', stateRegistration: 'Isento' },
+    { id: 3, clientType: 'Individual', fullName: 'Joana Martins', address: 'Travessa das Palmeiras, 45, Salvador, BA', phone: '(71) 99999-8888', cpf: '111.222.333-44' },
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
-  { id: 1, name: 'Produto A', price: 25.5, type: 'Regular' },
-  { id: 2, name: 'Produto B (Industrializado)', price: 150.0, type: 'Industrializado' },
-  { id: 3, name: 'Produto C', price: 15.0, type: 'Regular' },
+  { id: 1, name: 'Camiseta Branca', price: 25.00, type: 'Regular' },
+  { id: 2, name: 'Caneca Personalizada', price: 15.50, type: 'Industrializado' },
+  { id: 3, name: 'Boné Preto', price: 30.00, type: 'Regular' },
 ];
 
 export const MOCK_SERVICES: Service[] = [
-  { id: 1, name: 'Consultoria', price: 200.0 },
-  { id: 2, name: 'Manutenção', price: 120.0 },
+  { id: 1, name: 'Consultoria de Marketing', price: 150.00 },
+  { id: 2, name: 'Manutenção de Computador', price: 80.00 },
+  { id: 3, name: 'Design Gráfico - Logotipo', price: 300.00 },
 ];
 
 export const MOCK_SALES: Sale[] = [
-    { id: 1, item: MOCK_PRODUCTS[0], quantity: 2, total: 51.0, date: new Date().toISOString().split('T')[0], withInvoice: false, clientType: 'Consumidor Comum'},
-    { id: 2, item: MOCK_PRODUCTS[1], quantity: 1, total: 150.0, date: new Date().toISOString().split('T')[0], withInvoice: true, clientType: 'Empresa'},
-    { id: 3, item: MOCK_SERVICES[0], quantity: 1, total: 200.0, date: new Date().toISOString().split('T')[0], withInvoice: true, clientType: 'Empresa'},
+  { id: 1, item: MOCK_PRODUCTS[0], quantity: 2, total: 50.00, date: '2025-07-20', withInvoice: true, client: MOCK_CLIENTS[0] },
+  { id: 2, item: MOCK_SERVICES[1], quantity: 1, total: 80.00, date: '2025-07-19', withInvoice: false, client: MOCK_CLIENTS[1] },
+  { id: 3, item: MOCK_PRODUCTS[1], quantity: 10, total: 155.00, date: '2025-07-18', withInvoice: true, client: MOCK_CLIENTS[1] },
+  { id: 4, item: MOCK_PRODUCTS[2], quantity: 1, total: 30.00, date: '2025-07-15', withInvoice: false, client: null },
+];
+
+export const MOCK_SERVICE_PROVISIONS: ServiceProvision[] = [
+    { id: 1, service: MOCK_SERVICES[0], quantity: 1, total: 150.00, date: '2025-07-22', withInvoice: true, client: MOCK_CLIENTS[1] },
+    { id: 2, service: MOCK_SERVICES[2], quantity: 1, total: 300.00, date: '2025-07-21', withInvoice: true, client: null }
 ];

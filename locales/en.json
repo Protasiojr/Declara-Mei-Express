@@ -1,4 +1,3 @@
-
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -70,7 +69,10 @@
     "addEmployee": "Add Employee",
     "editEmployee": "Edit Employee Data",
     "noEmployee": "No employee registered.",
-    "confirmSave": "Do you want to save the changes?"
+    "confirmSave": "Do you want to save the changes?",
+    "vacationPeriod": "Vacation Period",
+    "vacationStart": "Vacation Start",
+    "vacationEnd": "Vacation End"
   },
   "clients": {
     "registry": "Client Registry",
@@ -106,6 +108,7 @@
     "total": "Total",
     "date": "Date",
     "client": "Client",
+    "clientLabel": "Client",
     "invoice": "Invoice",
     "clientTypeCompany": "Company",
     "clientTypeConsumer": "Regular Consumer",
@@ -115,10 +118,12 @@
     "generateYearly": "Generate Yearly JSON",
     "reportNote": "The monthly button is only enabled on the last day of the month. The yearly one, on the last day of the year. The daily one is always available for day-end closing.",
     "registerNewSale": "Register New Sale",
+    "registerNewClient": "New Client",
+    "searchClientPlaceholder": "Search for client by name, CPF/CNPJ...",
     "addSale": "Add Sale",
     "editSale": "Edit Sale",
     "deleteConfirm": "Are you sure you want to delete this sale?",
-    "selectItem": "Select an item",
+    "selectItem": "Select or search for an item",
     "filterStartDate": "Start Date",
     "filterEndDate": "End Date",
     "filterItemType": "Item Type",
@@ -126,7 +131,14 @@
     "filterProducts": "Products",
     "filterServices": "Services",
     "clearFilters": "Clear Filters",
-    "noResults": "No sales found matching your criteria."
+    "noResults": "No sales found matching your criteria.",
+    "searchItemPlaceholder": "Search for product/service by name...",
+    "registerNewProduct": "New Product",
+    "registerNewService": "New Service",
+    "addNewItem": "Add New Item",
+    "itemName": "Item Name",
+    "itemPrice": "Price",
+    "itemType": "Item Type"
   },
   "products": {
     "productName": "Product Name",
@@ -155,7 +167,14 @@
     "addService": "Add New Service",
     "editService": "Edit Service",
     "noServices": "No services registered.",
-    "editJustificationPrompt": "Please provide a justification for editing this service."
+    "editJustificationPrompt": "Please provide a justification for editing this service.",
+    "provisionHistory": "Service Provision History",
+    "registerProvision": "Register Service Provision",
+    "editProvision": "Edit Service Provision",
+    "deleteProvisionConfirm": "Are you sure you want to delete this service provision?",
+    "noProvisions": "No service provisions registered.",
+    "selectService": "Select a service",
+    "editProvisionJustificationPrompt": "Please provide a justification for editing this service provision."
   },
   "company": {
     "registrationInfo": "Registration Information",
@@ -210,6 +229,7 @@
     "invalidEmail": "Please enter a valid email.",
     "invalidCnpj": "Please enter a valid CNPJ in the format XX.XXX.XXX/XXXX-XX.",
     "passwordMinLength": "Password must be at least 6 characters long.",
-    "invalidPrice": "Please enter a valid price greater than zero."
+    "invalidPrice": "Please enter a valid price greater than zero.",
+    "endDateAfterStartDate": "The end date must be after the start date."
   }
 }

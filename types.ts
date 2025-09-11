@@ -1,4 +1,3 @@
-
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
@@ -33,6 +32,8 @@ export interface Employee {
   address: string;
   phone: string;
   registrationData: string;
+  vacationStart?: string;
+  vacationEnd?: string;
 }
 
 export interface Client {
@@ -68,5 +69,15 @@ export interface Sale {
   total: number;
   date: string;
   withInvoice: boolean;
-  clientType: 'Empresa' | 'Consumidor Comum';
+  client: Client | null;
+}
+
+export interface ServiceProvision {
+  id: number;
+  service: Service;
+  quantity: number;
+  total: number;
+  date: string;
+  withInvoice: boolean;
+  client: Client | null;
 }

@@ -1,4 +1,3 @@
-
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -70,7 +69,10 @@
     "addEmployee": "Adicionar Funcionário",
     "editEmployee": "Editar Dados do Funcionário",
     "noEmployee": "Nenhum funcionário cadastrado.",
-    "confirmSave": "Deseja salvar as alterações?"
+    "confirmSave": "Deseja salvar as alterações?",
+    "vacationPeriod": "Período de Férias",
+    "vacationStart": "Início das Férias",
+    "vacationEnd": "Fim das Férias"
   },
   "clients": {
     "registry": "Cadastro de Clientes",
@@ -106,6 +108,7 @@
     "total": "Total",
     "date": "Data",
     "client": "Cliente",
+    "clientLabel": "Cliente",
     "invoice": "NF-e",
     "clientTypeCompany": "Empresa",
     "clientTypeConsumer": "Consumidor Comum",
@@ -115,10 +118,12 @@
     "generateYearly": "Gerar JSON Anual",
     "reportNote": "O botão mensal só é habilitado no último dia do mês. O anual, no último dia do ano. O diário está sempre disponível para fechamento do dia.",
     "registerNewSale": "Registrar Nova Venda",
+    "registerNewClient": "Novo Cliente",
+    "searchClientPlaceholder": "Buscar cliente por nome, CPF/CNPJ...",
     "addSale": "Adicionar Venda",
     "editSale": "Alterar Venda",
     "deleteConfirm": "Tem certeza que deseja excluir esta venda?",
-    "selectItem": "Selecione um item",
+    "selectItem": "Selecione ou busque um item",
     "filterStartDate": "Data Inicial",
     "filterEndDate": "Data Final",
     "filterItemType": "Tipo de Item",
@@ -126,7 +131,14 @@
     "filterProducts": "Produtos",
     "filterServices": "Serviços",
     "clearFilters": "Limpar Filtros",
-    "noResults": "Nenhuma venda encontrada com os seus critérios."
+    "noResults": "Nenhuma venda encontrada com os seus critérios.",
+    "searchItemPlaceholder": "Buscar produto/serviço por nome...",
+    "registerNewProduct": "Novo Produto",
+    "registerNewService": "Novo Serviço",
+    "addNewItem": "Adicionar Novo Item",
+    "itemName": "Nome do Item",
+    "itemPrice": "Preço",
+    "itemType": "Tipo do Item"
   },
   "products": {
     "productName": "Nome do Produto",
@@ -155,7 +167,14 @@
     "addService": "Adicionar Novo Serviço",
     "editService": "Editar Serviço",
     "noServices": "Nenhum serviço cadastrado.",
-    "editJustificationPrompt": "Por favor, forneça uma justificativa para alterar este serviço."
+    "editJustificationPrompt": "Por favor, forneça uma justificativa para alterar este serviço.",
+    "provisionHistory": "Histórico de Serviços Prestados",
+    "registerProvision": "Registrar Serviço Prestado",
+    "editProvision": "Alterar Serviço Prestado",
+    "deleteProvisionConfirm": "Tem certeza que deseja excluir esta prestação de serviço?",
+    "noProvisions": "Nenhuma prestação de serviço registrada.",
+    "selectService": "Selecione um serviço",
+    "editProvisionJustificationPrompt": "Por favor, forneça uma justificativa para alterar esta prestação de serviço."
   },
   "company": {
     "registrationInfo": "Informações Cadastrais",
@@ -210,6 +229,7 @@
     "invalidEmail": "Por favor, insira um email válido.",
     "invalidCnpj": "Por favor, insira um CNPJ no formato XX.XXX.XXX/XXXX-XX.",
     "passwordMinLength": "A senha deve ter pelo menos 6 caracteres.",
-    "invalidPrice": "Por favor, insira um preço válido maior que zero."
+    "invalidPrice": "Por favor, insira um preço válido maior que zero.",
+    "endDateAfterStartDate": "A data final deve ser posterior à data inicial."
   }
 }

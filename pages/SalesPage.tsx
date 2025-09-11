@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Sale, Product, Service } from '../types';
-import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES } from '../constants';
+import { Sale, Product, Service, Client } from '../types';
+import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CLIENTS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from '../components/ui/Modal';
 
@@ -11,12 +12,19 @@ type SaleFormData = {
   quantity: string;
   date: string;
   withInvoice: boolean;
-  clientType: 'Empresa' | 'Consumidor Comum';
+  client: Client | null;
 };
+
+type ClientFormData = Omit<Client, 'id'>;
+type NewItemFormData = { name: string; price: string; type: 'Regular' | 'Industrializado' };
 
 const SalesPage: React.FC = () => {
     const { t } = useTranslation();
     const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
+    const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
+    const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+    const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentSale, setCurrentSale] = useState<Sale | null>(null);
     
@@ -25,7 +33,7 @@ const SalesPage: React.FC = () => {
         quantity: '1',
         date: new Date().toISOString().split('T')[0],
         withInvoice: false,
-        clientType: 'Consumidor Comum',
+        client: null,
     };
     const [formData, setFormData] = useState<SaleFormData>(initialFormData);
     const [errors, setErrors] = useState<Partial<SaleFormData>>({});
@@ -40,12 +48,77 @@ const SalesPage: React.FC = () => {
         itemType: 'all', // 'all', 'product', 'service'
     });
 
+    // Client Search State
+    const [clientSearch, setClientSearch] = useState('');
+    const [searchResults, setSearchResults] = useState<Client[]>([]);
+    
+    // New Client Modal State
+    const [isClientModalOpen, setIsClientModalOpen] = useState(false);
+    const initialClientFormData: ClientFormData = { 
+        clientType: 'Individual', fullName: '', address: '', phone: '', cpf: '',
+        companyName: '', tradeName: '', cnpj: '', stateRegistration: ''
+    };
+    const [clientFormData, setClientFormData] = useState<ClientFormData>(initialClientFormData);
+    const [clientErrors, setClientErrors] = useState<Partial<ClientFormData>>({});
+    
+    // Item Search State
+    const [itemSearch, setItemSearch] = useState('');
+    const [itemSearchResults, setItemSearchResults] = useState<({ value: string; label: string; price: number })[]>([]);
+
+    // New Item Modal State
+    const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
+    const [newItemType, setNewItemType] = useState<'product' | 'service'>('product');
+    const [newItemFormData, setNewItemFormData] = useState<NewItemFormData>({ name: '', price: '', type: 'Regular' });
+    const [newItemErrors, setNewItemErrors] = useState({ name: '', price: '' });
+
+    const findItemByValue = (value: string): Product | Service | undefined => {
+        const [type, idStr] = value.split('-');
+        const id = parseInt(idStr, 10);
+        if (type === 'product') return products.find(p => p.id === id);
+        if (type === 'service') return services.find(s => s.id === id);
+        return undefined;
+    };
+
+    useEffect(() => {
+        if (clientSearch.trim() === '') {
+            setSearchResults([]);
+            return;
+        }
+        const lowercasedQuery = clientSearch.toLowerCase();
+        const results = clients.filter(c =>
+            c.fullName.toLowerCase().includes(lowercasedQuery) ||
+            (c.companyName && c.companyName.toLowerCase().includes(lowercasedQuery)) ||
+            (c.cpf && c.cpf.includes(lowercasedQuery)) ||
+            (c.cnpj && c.cnpj.includes(lowercasedQuery))
+        );
+        setSearchResults(results);
+    }, [clientSearch, clients]);
+
     const availableItems = useMemo(() => {
         const items: ({ value: string; label: string; price: number })[] = [];
-        MOCK_PRODUCTS.forEach(p => items.push({ value: `product-${p.id}`, label: p.name, price: p.price }));
-        MOCK_SERVICES.forEach(s => items.push({ value: `service-${s.id}`, label: s.name, price: s.price }));
+        products.forEach(p => items.push({ value: `product-${p.id}`, label: p.name, price: p.price }));
+        services.forEach(s => items.push({ value: `service-${s.id}`, label: s.name, price: s.price }));
         return items;
-    }, []);
+    }, [products, services]);
+
+     useEffect(() => {
+        if (itemSearch.trim() === '') {
+            setItemSearchResults([]);
+            return;
+        }
+        // Avoid showing search results if an item is already perfectly matched and selected
+        const selectedItem = findItemByValue(formData.itemId);
+        if (selectedItem && selectedItem.name.toLowerCase() === itemSearch.toLowerCase()) {
+            setItemSearchResults([]);
+            return;
+        }
+
+        const lowercasedQuery = itemSearch.toLowerCase();
+        const results = availableItems.filter(item =>
+            item.label.toLowerCase().includes(lowercasedQuery)
+        );
+        setItemSearchResults(results);
+    }, [itemSearch, availableItems, formData.itemId]);
 
     const filteredSales = useMemo(() => {
         return sales.filter(sale => {
@@ -65,18 +138,6 @@ const SalesPage: React.FC = () => {
         });
     }, [sales, filters]);
 
-    const findItemByValue = (value: string): Product | Service | undefined => {
-        const [type, idStr] = value.split('-');
-        const id = parseInt(idStr, 10);
-        if (type === 'product') {
-            return MOCK_PRODUCTS.find(p => p.id === id);
-        }
-        if (type === 'service') {
-            return MOCK_SERVICES.find(s => s.id === id);
-        }
-        return undefined;
-    };
-
     const validate = () => {
         const newErrors: Partial<SaleFormData> = {};
         if (!formData.itemId) newErrors.itemId = t('validation.required');
@@ -89,6 +150,7 @@ const SalesPage: React.FC = () => {
     
     const handleOpenModal = (sale: Sale | null) => {
         setErrors({});
+        setClientSearch('');
         if (sale) {
             setCurrentSale(sale);
             const itemType = 'type' in sale.item ? 'product' : 'service';
@@ -97,11 +159,13 @@ const SalesPage: React.FC = () => {
                 quantity: String(sale.quantity),
                 date: sale.date,
                 withInvoice: sale.withInvoice,
-                clientType: sale.clientType,
+                client: sale.client,
             });
+            setItemSearch(sale.item.name);
         } else {
             setCurrentSale(null);
             setFormData(initialFormData);
+            setItemSearch('');
         }
         setIsModalOpen(true);
     };
@@ -111,12 +175,10 @@ const SalesPage: React.FC = () => {
     const handleSave = () => {
         if (!validate()) return;
         if (currentSale) {
-            // Editing existing sale, open justification modal
             setJustification('');
             setJustificationError('');
             setIsJustificationModalOpen(true);
         } else {
-            // Adding new sale
             const item = findItemByValue(formData.itemId);
             if (!item) return;
             const newSale: Sale = {
@@ -126,7 +188,7 @@ const SalesPage: React.FC = () => {
                 total: item.price * Number(formData.quantity),
                 date: formData.date,
                 withInvoice: formData.withInvoice,
-                clientType: formData.clientType
+                client: formData.client
             };
             setSales(prev => [newSale, ...prev]);
             handleCloseModal();
@@ -150,7 +212,7 @@ const SalesPage: React.FC = () => {
                 total: item.price * Number(formData.quantity),
                 date: formData.date,
                 withInvoice: formData.withInvoice,
-                clientType: formData.clientType
+                client: formData.client
             };
             setSales(sales.map(s => s.id === currentSale.id ? updatedSale : s));
         }
@@ -158,7 +220,6 @@ const SalesPage: React.FC = () => {
         setIsJustificationModalOpen(false);
         handleCloseModal();
     };
-
 
     const handleDelete = (saleId: number) => {
         if (window.confirm(t('sales.deleteConfirm'))) {
@@ -169,10 +230,7 @@ const SalesPage: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
+        setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
     
     const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -180,22 +238,119 @@ const SalesPage: React.FC = () => {
         setFilters(prev => ({ ...prev, [name]: value }));
     };
     
-    const clearFilters = () => {
-        setFilters({
-            startDate: '',
-            endDate: '',
-            itemType: 'all',
-        });
-    };
+    const clearFilters = () => setFilters({ startDate: '', endDate: '', itemType: 'all' });
     
     const totalValue = useMemo(() => {
         const item = findItemByValue(formData.itemId);
         const quantity = Number(formData.quantity);
-        if (item && !isNaN(quantity) && quantity > 0) {
-            return item.price * quantity;
-        }
+        if (item && !isNaN(quantity) && quantity > 0) return item.price * quantity;
         return 0;
-    }, [formData.itemId, formData.quantity]);
+    }, [formData.itemId, formData.quantity, products, services]);
+
+    const handleSelectClient = (client: Client) => {
+        setFormData(prev => ({...prev, client}));
+        setClientSearch('');
+        setSearchResults([]);
+    };
+    
+    const handleClearClient = () => {
+        setFormData(prev => ({...prev, client: null}));
+    };
+
+    // Client Modal Functions
+    const validateClient = () => {
+        const newErrors: Partial<ClientFormData> = {};
+        if (!clientFormData.fullName.trim()) newErrors.fullName = t('validation.required');
+        if (!clientFormData.address.trim()) newErrors.address = t('validation.required');
+        if (!clientFormData.phone.trim()) newErrors.phone = t('validation.required');
+
+        if (clientFormData.clientType === 'Individual') {
+            if (!clientFormData.cpf?.trim()) newErrors.cpf = t('validation.required');
+        } else {
+            if (!clientFormData.companyName?.trim()) newErrors.companyName = t('validation.required');
+            if (!clientFormData.cnpj?.trim()) newErrors.cnpj = t('validation.required');
+        }
+        setClientErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSaveNewClient = () => {
+        if (!validateClient()) return;
+        const newClient: Client = {
+            id: Date.now(),
+            ...clientFormData
+        };
+        setClients(prev => [newClient, ...prev]);
+        handleSelectClient(newClient); // Auto-select the new client
+        setIsClientModalOpen(false); // Close client modal
+    };
+    
+    const handleClientTypeChange = (type: 'Individual' | 'Company') => {
+        setClientErrors({});
+        setClientFormData(prev => ({...initialClientFormData, clientType: type, address: prev.address, phone: prev.phone}));
+    }
+
+    const handleClientInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setClientFormData(prev => ({ ...prev, [name]: value }));
+    };
+    
+    const getClientDisplayName = (client: Client | null) => {
+        if (!client) return t('sales.clientTypeConsumer');
+        return client.clientType === 'Company' ? client.companyName : client.fullName;
+    }
+    
+    // Item search and new item functions
+    const handleItemSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newSearchText = e.target.value;
+        setItemSearch(newSearchText);
+
+        const currentItem = findItemByValue(formData.itemId);
+        if (currentItem && currentItem.name !== newSearchText) {
+            setFormData(prev => ({ ...prev, itemId: '' }));
+        }
+    };
+    
+    const handleSelectItem = (item: { value: string; label: string }) => {
+        setFormData(prev => ({ ...prev, itemId: item.value }));
+        setItemSearch(item.label);
+        setItemSearchResults([]);
+    };
+    
+    const handleOpenNewItemModal = (type: 'product' | 'service') => {
+        setNewItemType(type);
+        setNewItemFormData({ name: '', price: '', type: 'Regular' });
+        setNewItemErrors({ name: '', price: '' });
+        setIsNewItemModalOpen(true);
+    };
+    
+    const handleSaveNewItem = () => {
+        const { name, price } = newItemFormData;
+        const priceNum = Number(price);
+        const newErrors = { name: '', price: '' };
+        let isValid = true;
+        if (!name.trim()) {
+            newErrors.name = t('validation.required');
+            isValid = false;
+        }
+        if (!price || isNaN(priceNum) || priceNum <= 0) {
+            newErrors.price = t('validation.invalidPrice');
+            isValid = false;
+        }
+        setNewItemErrors(newErrors);
+        if (!isValid) return;
+
+        if (newItemType === 'product') {
+            const newProduct: Product = { id: Date.now(), name, price: priceNum, type: newItemFormData.type };
+            setProducts(prev => [newProduct, ...prev]);
+            handleSelectItem({ value: `product-${newProduct.id}`, label: newProduct.name });
+        } else {
+            const newService: Service = { id: Date.now(), name, price: priceNum };
+            setServices(prev => [newService, ...prev]);
+            handleSelectItem({ value: `service-${newService.id}`, label: newService.name });
+        }
+        setIsNewItemModalOpen(false);
+    };
 
 
     return (
@@ -239,7 +394,7 @@ const SalesPage: React.FC = () => {
                                     <th scope="col" className="px-6 py-3">{t('sales.quantity')}</th>
                                     <th scope="col" className="px-6 py-3">{t('sales.total')}</th>
                                     <th scope="col" className="px-6 py-3">{t('sales.date')}</th>
-                                    <th scope="col" className="px-6 py-3">{t('sales.client')}</th>
+                                    <th scope="col" className="px-6 py-3">{t('sales.clientLabel')}</th>
                                     <th scope="col" className="px-6 py-3">{t('sales.invoice')}</th>
                                     <th scope="col" className="px-6 py-3 text-right">{t('common.actions')}</th>
                                 </tr>
@@ -250,8 +405,8 @@ const SalesPage: React.FC = () => {
                                         <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{sale.item.name}</td>
                                         <td className="px-6 py-4">{sale.quantity}</td>
                                         <td className="px-6 py-4">R$ {sale.total.toFixed(2)}</td>
-                                        <td className="px-6 py-4">{new Date(sale.date).toLocaleDateString()}</td>
-                                        <td className="px-6 py-4">{sale.clientType === 'Empresa' ? t('sales.clientTypeCompany') : t('sales.clientTypeConsumer')}</td>
+                                        <td className="px-6 py-4">{new Date(sale.date + 'T00:00').toLocaleDateString()}</td>
+                                        <td className="px-6 py-4">{getClientDisplayName(sale.client)}</td>
                                         <td className="px-6 py-4">{sale.withInvoice ? t('common.yes') : t('common.no')}</td>
                                         <td className="px-6 py-4 text-right space-x-2">
                                             <Button size="sm" variant="secondary" onClick={() => handleOpenModal(sale)}>{t('common.edit')}</Button>
@@ -271,13 +426,29 @@ const SalesPage: React.FC = () => {
 
             <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={currentSale ? t('sales.editSale') : t('sales.addSale')}>
                  <div className="space-y-4">
-                    <div>
+                    <div className="relative">
                         <label className="block text-sm font-medium">{t('sales.item')}</label>
-                        <select name="itemId" value={formData.itemId} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.itemId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}>
-                            <option value="">{t('sales.selectItem')}</option>
-                            {availableItems.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
-                        </select>
-                         {errors.itemId && <p className="text-sm text-red-500 mt-1">{errors.itemId}</p>}
+                        <div className="flex items-center space-x-2 mt-1">
+                            <input
+                                type="text"
+                                value={itemSearch}
+                                onChange={handleItemSearchChange}
+                                placeholder={t('sales.searchItemPlaceholder')}
+                                className={`block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.itemId && !formData.itemId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                            />
+                            <Button type="button" variant="secondary" size="sm" onClick={() => handleOpenNewItemModal('product')}>{t('sales.registerNewProduct')}</Button>
+                            <Button type="button" variant="secondary" size="sm" onClick={() => handleOpenNewItemModal('service')}>{t('sales.registerNewService')}</Button>
+                        </div>
+                        {errors.itemId && !formData.itemId && <p className="text-sm text-red-500 mt-1">{errors.itemId}</p>}
+                        {itemSearchResults.length > 0 && (
+                            <ul className="absolute z-20 w-full bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                {itemSearchResults.map(item => (
+                                    <li key={item.value} onClick={() => handleSelectItem(item)} className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                        {item.label} (R$ {item.price.toFixed(2)})
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                      <div>
                         <label className="block text-sm font-medium">{t('sales.quantity')}</label>
@@ -289,13 +460,38 @@ const SalesPage: React.FC = () => {
                         <input type="date" name="date" value={formData.date} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.date ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                          {errors.date && <p className="text-sm text-red-500 mt-1">{errors.date}</p>}
                     </div>
-                     <div>
-                        <label className="block text-sm font-medium">{t('sales.client')}</label>
-                        <select name="clientType" value={formData.clientType} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                            <option value="Consumidor Comum">{t('sales.clientTypeConsumer')}</option>
-                            <option value="Empresa">{t('sales.clientTypeCompany')}</option>
-                        </select>
+                    <div className="relative">
+                        <label className="block text-sm font-medium">{t('sales.clientLabel')}</label>
+                         {formData.client ? (
+                             <div className="flex items-center justify-between mt-1 p-2 border rounded-md bg-gray-100 dark:bg-gray-600">
+                                 <span>{getClientDisplayName(formData.client)}</span>
+                                 <button type="button" onClick={handleClearClient} className="text-red-500 hover:text-red-700">&times;</button>
+                             </div>
+                         ) : (
+                             <>
+                                <div className="flex items-center space-x-2 mt-1">
+                                    <input
+                                        type="text"
+                                        value={clientSearch}
+                                        onChange={(e) => setClientSearch(e.target.value)}
+                                        placeholder={t('sales.searchClientPlaceholder')}
+                                        className="block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                                    />
+                                    <Button type="button" variant="secondary" size="sm" onClick={() => setIsClientModalOpen(true)}>{t('sales.registerNewClient')}</Button>
+                                </div>
+                                {searchResults.length > 0 && (
+                                    <ul className="absolute z-10 w-full bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                        {searchResults.map(client => (
+                                            <li key={client.id} onClick={() => handleSelectClient(client)} className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                                {getClientDisplayName(client)} ({client.clientType === 'Individual' ? client.cpf : client.cnpj})
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </>
+                         )}
                     </div>
+
                      <div className="flex items-center">
                         <input type="checkbox" name="withInvoice" id="withInvoice" checked={formData.withInvoice} onChange={handleInputChange} className="h-4 w-4 rounded text-primary-600" />
                         <label htmlFor="withInvoice" className="ml-2 block text-sm">{t('sales.invoice')}</label>
@@ -316,10 +512,7 @@ const SalesPage: React.FC = () => {
                     <div>
                         <textarea
                             value={justification}
-                            onChange={(e) => {
-                                setJustification(e.target.value);
-                                if(justificationError) setJustificationError('');
-                            }}
+                            onChange={(e) => { setJustification(e.target.value); if(justificationError) setJustificationError(''); }}
                             rows={4}
                             className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm dark:bg-gray-700 ${justificationError ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                             placeholder={t('common.justification')}
@@ -329,6 +522,68 @@ const SalesPage: React.FC = () => {
                     <div className="flex justify-end space-x-2 pt-2">
                         <Button variant="secondary" onClick={() => setIsJustificationModalOpen(false)}>{t('common.cancel')}</Button>
                         <Button onClick={handleConfirmSaveWithJustification}>{t('common.confirm')}</Button>
+                    </div>
+                </div>
+            </Modal>
+            
+            <Modal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} title={t('clients.addClient')}>
+                 <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium mb-2">{t('clients.clientType')}</label>
+                        <div className="flex gap-4">
+                            <label className="flex items-center"><input type="radio" name="clientType" checked={clientFormData.clientType === 'Individual'} onChange={() => handleClientTypeChange('Individual')} className="h-4 w-4 text-primary-600" /><span className="ml-2 text-sm">{t('clients.individual')}</span></label>
+                            <label className="flex items-center"><input type="radio" name="clientType" checked={clientFormData.clientType === 'Company'} onChange={() => handleClientTypeChange('Company')} className="h-4 w-4 text-primary-600" /><span className="ml-2 text-sm">{t('clients.company')}</span></label>
+                        </div>
+                    </div>
+                    {clientFormData.clientType === 'Individual' ? (
+                        <>
+                            <div><label className="block text-sm font-medium">{t('clients.fullName')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.cpf')}</label><input type="text" name="cpf" value={clientFormData.cpf} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cpf && <p className="text-sm text-red-500 mt-1">{clientErrors.cpf}</p>}</div>
+                        </>
+                    ) : (
+                        <>
+                            <div><label className="block text-sm font-medium">{t('clients.companyName')}</label><input type="text" name="companyName" value={clientFormData.companyName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.companyName && <p className="text-sm text-red-500 mt-1">{clientErrors.companyName}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.tradeName')}</label><input type="text" name="tradeName" value={clientFormData.tradeName} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
+                            <div><label className="block text-sm font-medium">{t('clients.cnpj')}</label><input type="text" name="cnpj" value={clientFormData.cnpj} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cnpj && <p className="text-sm text-red-500 mt-1">{clientErrors.cnpj}</p>}</div>
+                            <div><label className="block text-sm font-medium">{t('clients.stateRegistration')}</label><input type="text" name="stateRegistration" value={clientFormData.stateRegistration} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
+                            <div><label className="block text-sm font-medium">{t('clients.contactPerson')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
+                        </>
+                    )}
+                    <div><label className="block text-sm font-medium">{t('clients.address')}</label><input type="text" name="address" value={clientFormData.address} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.address && <p className="text-sm text-red-500 mt-1">{clientErrors.address}</p>}</div>
+                    <div><label className="block text-sm font-medium">{t('clients.phone')}</label><input type="text" name="phone" value={clientFormData.phone} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${clientErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.phone && <p className="text-sm text-red-500 mt-1">{clientErrors.phone}</p>}</div>
+
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button variant="secondary" onClick={() => setIsClientModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleSaveNewClient}>{t('common.save')}</Button>
+                    </div>
+                </div>
+            </Modal>
+            
+            {/* New Item Modal */}
+             <Modal isOpen={isNewItemModalOpen} onClose={() => setIsNewItemModalOpen(false)} title={t('sales.addNewItem')}>
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium">{t('sales.itemName')}</label>
+                        <input type="text" value={newItemFormData.name} onChange={(e) => setNewItemFormData(p => ({...p, name: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${newItemErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                        {newItemErrors.name && <p className="text-sm text-red-500 mt-1">{newItemErrors.name}</p>}
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium">{t('sales.itemPrice')}</label>
+                        <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                        {newItemErrors.price && <p className="text-sm text-red-500 mt-1">{newItemErrors.price}</p>}
+                    </div>
+                    {newItemType === 'product' && (
+                        <div>
+                             <label className="block text-sm font-medium">{t('sales.itemType')}</label>
+                             <select value={newItemFormData.type} onChange={(e) => setNewItemFormData(p => ({...p, type: e.target.value as 'Regular' | 'Industrializado'}))} className="mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                <option value="Regular">{t('products.typeRegular')}</option>
+                                <option value="Industrializado">{t('products.typeIndustrialized')}</option>
+                            </select>
+                        </div>
+                    )}
+                    <div className="flex justify-end space-x-2 pt-4">
+                        <Button variant="secondary" onClick={() => setIsNewItemModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleSaveNewItem}>{t('common.save')}</Button>
                     </div>
                 </div>
             </Modal>

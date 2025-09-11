@@ -26,6 +26,11 @@ const ReportsPage: React.FC = () => {
             if (salesEndDate && sale.date > salesEndDate) return false;
             return true;
         });
+        
+        const getClientDisplayName = (client: Client | null) => {
+            if (!client) return t('sales.clientTypeConsumer');
+            return client.clientType === 'Company' ? client.companyName : client.fullName;
+        }
 
         const reportTitle = t('reports.salesReportTitle');
         const dateRange = salesStartDate && salesEndDate ? `${t('reports.period')}: ${new Date(salesStartDate + 'T00:00:00').toLocaleDateString()} ${t('reports.to')} ${new Date(salesEndDate + 'T00:00:00').toLocaleDateString()}` : t('reports.allSales');
@@ -38,7 +43,7 @@ const ReportsPage: React.FC = () => {
                     <td style="border: 1px solid #ddd; padding: 8px;">${sale.item.name}</td>
                     <td style="border: 1px solid #ddd; padding: 8px;">${sale.quantity}</td>
                     <td style="border: 1px solid #ddd; padding: 8px;">${new Date(sale.date + 'T00:00:00').toLocaleDateString()}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${sale.clientType === 'Empresa' ? t('sales.clientTypeCompany') : t('sales.clientTypeConsumer')}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${getClientDisplayName(sale.client)}</td>
                     <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">R$ ${sale.total.toFixed(2)}</td>
                 </tr>
             `;

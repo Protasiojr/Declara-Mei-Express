@@ -14,7 +14,7 @@ const EmployeePage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [formData, setFormData] = useState<EmployeeFormData>({
-    fullName: '', address: '', phone: '', registrationData: ''
+    fullName: '', address: '', phone: '', registrationData: '', vacationStart: '', vacationEnd: ''
   });
   const [errors, setErrors] = useState<Partial<EmployeeFormData>>({});
 
@@ -38,6 +38,12 @@ const EmployeePage: React.FC = () => {
       newErrors.registrationData = t('validation.required');
       isValid = false;
     }
+    
+    if (formData.vacationStart && formData.vacationEnd && formData.vacationStart > formData.vacationEnd) {
+      newErrors.vacationEnd = t('validation.endDateAfterStartDate');
+      isValid = false;
+    }
+
 
     setErrors(newErrors);
     return isValid;
@@ -45,9 +51,13 @@ const EmployeePage: React.FC = () => {
 
   const handleOpenModal = () => {
     if (employee) {
-        setFormData(employee);
+        setFormData({
+            ...employee,
+            vacationStart: employee.vacationStart || '',
+            vacationEnd: employee.vacationEnd || ''
+        });
     } else {
-        setFormData({ fullName: '', address: '', phone: '', registrationData: '' });
+        setFormData({ fullName: '', address: '', phone: '', registrationData: '', vacationStart: '', vacationEnd: '' });
     }
     setErrors({});
     setIsModalOpen(true);
@@ -64,7 +74,9 @@ const EmployeePage: React.FC = () => {
     if (window.confirm(t('employee.confirmSave'))) {
       const updatedEmployee = {
         id: employee?.id || Date.now(),
-        ...formData
+        ...formData,
+        vacationStart: formData.vacationStart || undefined,
+        vacationEnd: formData.vacationEnd || undefined,
       };
       setEmployee(updatedEmployee);
       handleCloseModal();
@@ -82,19 +94,20 @@ const EmployeePage: React.FC = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const renderInput = (name: keyof EmployeeFormData, label: string, type: 'text' | 'textarea' = 'text') => {
+  const renderInput = (name: keyof EmployeeFormData, label: string, type: 'text' | 'textarea' | 'date' = 'text') => {
     const InputComponent = type === 'textarea' ? 'textarea' : 'input';
+    const inputType = type === 'textarea' ? undefined : type;
     return (
         <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
             <InputComponent
-                type={type === 'textarea' ? undefined : 'text'}
+                type={inputType}
                 name={name}
-                value={formData[name]}
+                value={formData[name] || ''}
                 onChange={handleInputChange}
                 rows={type === 'textarea' ? 3 : undefined}
                 className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm dark:bg-gray-700 ${errors[name] ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-primary-500 focus:ring-primary-500'}`}
-                required
+                required={type !== 'date'}
             />
             {errors[name] && <p className="mt-1 text-sm text-red-600">{errors[name]}</p>}
         </div>
@@ -113,6 +126,12 @@ const EmployeePage: React.FC = () => {
               <p><strong>{t('employee.addressLabel')}:</strong> {employee.address}</p>
               <p><strong>{t('employee.phoneLabel')}:</strong> {employee.phone}</p>
               <p><strong>{t('employee.registrationDataLabel')}:</strong> {employee.registrationData}</p>
+              {employee.vacationStart && employee.vacationEnd && (
+                <p>
+                  <strong>{t('employee.vacationPeriod')}:</strong> 
+                  {` ${new Date(employee.vacationStart + 'T00:00').toLocaleDateString()} - ${new Date(employee.vacationEnd + 'T00:00').toLocaleDateString()}`}
+                </p>
+              )}
               <div className="flex justify-end space-x-2 mt-4">
                 <Button variant="danger" onClick={handleDelete}>{t('common.delete')}</Button>
                 <Button onClick={handleOpenModal}>{t('common.editData')}</Button>
@@ -136,6 +155,15 @@ const EmployeePage: React.FC = () => {
             {renderInput('address', t('employee.address'))}
             {renderInput('phone', t('employee.phone'))}
             {renderInput('registrationData', t('employee.registrationData'), 'textarea')}
+            
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('employee.vacationPeriod')}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    {renderInput('vacationStart', t('employee.vacationStart'), 'date')}
+                    {renderInput('vacationEnd', t('employee.vacationEnd'), 'date')}
+                </div>
+            </div>
+
             <div className="flex justify-end space-x-2 pt-4">
                 <Button type="button" variant="secondary" onClick={handleCloseModal}>{t('common.cancel')}</Button>
                 <Button type="submit">{t('common.save')}</Button>
