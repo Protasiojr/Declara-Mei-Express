@@ -1,3 +1,4 @@
+
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -7,11 +8,18 @@
     "editData": "Alterar Dados",
     "delete": "Excluir",
     "yes": "Sim",
-    "no": "Não"
+    "no": "Não",
+    "exportCsv": "Exportar para CSV",
+    "actions": "Ações",
+    "justification": "Justificativa",
+    "justificationPrompt": "Por favor, forneça uma justificativa para a alteração.",
+    "justificationRequired": "A justificativa é obrigatória.",
+    "confirm": "Confirmar"
   },
   "sidebar": {
     "dashboard": "Dashboard",
     "employee": "Funcionário",
+    "clients": "Clientes",
     "sales": "Vendas",
     "products": "Produtos",
     "services": "Serviços",
@@ -64,6 +72,30 @@
     "noEmployee": "Nenhum funcionário cadastrado.",
     "confirmSave": "Deseja salvar as alterações?"
   },
+  "clients": {
+    "registry": "Cadastro de Clientes",
+    "addNew": "Adicionar Novo Cliente",
+    "fullName": "Nome Completo",
+    "address": "Endereço",
+    "phone": "Telefone",
+    "registrationData": "Dados Cadastrais (CPF, CNPJ, etc.)",
+    "addClient": "Adicionar Cliente",
+    "editClient": "Alterar Cliente",
+    "noClients": "Nenhum cliente cadastrado.",
+    "deleteConfirmTitle": "Confirmar Exclusão de Cliente",
+    "deleteConfirmPrompt": "Para excluir este cliente, por favor, forneça uma justificativa.",
+    "clientType": "Tipo de Cliente",
+    "individual": "Pessoa Física",
+    "company": "Pessoa Jurídica",
+    "companyName": "Razão Social",
+    "tradeName": "Nome Fantasia",
+    "cnpj": "CNPJ",
+    "stateRegistration": "Inscrição Estadual",
+    "cpf": "CPF",
+    "contactPerson": "Nome do Contato",
+    "nameOrCompany": "Nome / Empresa",
+    "document": "Documento"
+  },
   "sales": {
     "title": "Vendas e Serviços Prestados",
     "registerNew": "Registrar Nova Venda / Serviço",
@@ -81,7 +113,20 @@
     "generateDaily": "Gerar JSON Diário",
     "generateMonthly": "Gerar JSON Mensal",
     "generateYearly": "Gerar JSON Anual",
-    "reportNote": "O botão mensal só é habilitado no último dia do mês. O anual, no último dia do ano. O diário está sempre disponível para fechamento do dia."
+    "reportNote": "O botão mensal só é habilitado no último dia do mês. O anual, no último dia do ano. O diário está sempre disponível para fechamento do dia.",
+    "registerNewSale": "Registrar Nova Venda",
+    "addSale": "Adicionar Venda",
+    "editSale": "Alterar Venda",
+    "deleteConfirm": "Tem certeza que deseja excluir esta venda?",
+    "selectItem": "Selecione um item",
+    "filterStartDate": "Data Inicial",
+    "filterEndDate": "Data Final",
+    "filterItemType": "Tipo de Item",
+    "filterAllItems": "Todos os Itens",
+    "filterProducts": "Produtos",
+    "filterServices": "Serviços",
+    "clearFilters": "Limpar Filtros",
+    "noResults": "Nenhuma venda encontrada com os seus critérios."
   },
   "products": {
     "productName": "Nome do Produto",
@@ -109,7 +154,8 @@
     "deleteConfirm": "Tem certeza que deseja excluir este serviço?",
     "addService": "Adicionar Novo Serviço",
     "editService": "Editar Serviço",
-    "noServices": "Nenhum serviço cadastrado."
+    "noServices": "Nenhum serviço cadastrado.",
+    "editJustificationPrompt": "Por favor, forneça uma justificativa para alterar este serviço."
   },
   "company": {
     "registrationInfo": "Informações Cadastrais",
@@ -136,7 +182,19 @@
     "annualDescription": "Adicione os JSONs mensais para gerar a Declaração Anual do MEI (DASN-SIMEI).",
     "generateAnnualButton": "Gerar Declaração Anual",
     "download": "Baixar Relatórios Gerados",
-    "downloadDescription": "Aqui ficarão disponíveis os links para download dos relatórios consolidados."
+    "downloadDescription": "Aqui ficarão disponíveis os links para download dos relatórios consolidados.",
+    "exportData": "Exportar Dados",
+    "salesReport": "Relatório de Vendas",
+    "salesReportDescription": "Selecione um período para exportar o relatório de vendas em formato PDF.",
+    "clientList": "Lista de Clientes",
+    "clientListDescription": "Exporte uma lista completa de todos os clientes cadastrados em formato PDF.",
+    "exportPdf": "Exportar para PDF",
+    "salesReportTitle": "Relatório de Vendas",
+    "clientListTitle": "Lista de Clientes",
+    "period": "Período",
+    "to": "a",
+    "allSales": "Todas as Vendas",
+    "totalAmount": "Valor Total"
   },
   "settings": {
     "general": "Configurações Gerais",

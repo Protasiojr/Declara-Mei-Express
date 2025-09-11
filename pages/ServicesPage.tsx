@@ -14,6 +14,13 @@ const ServicesPage: React.FC = () => {
     const [formData, setFormData] = useState({ name: '', price: '' });
     const [errors, setErrors] = useState({ name: '', price: '' });
 
+    const [isJustificationModalOpen, setIsJustificationModalOpen] = useState(false);
+    const [justification, setJustification] = useState('');
+    const [justificationError, setJustificationError] = useState('');
+    
+    // This state will hold the form data when the justification modal is opened
+    const [pendingServiceData, setPendingServiceData] = useState<{name: string, price: number} | null>(null);
+
     const validate = () => {
         const newErrors = { name: '', price: '' };
         let isValid = true;
@@ -55,19 +62,39 @@ const ServicesPage: React.FC = () => {
         };
 
         if (currentService) {
-            // Update
-            setServices(services.map(s => s.id === currentService.id ? { ...s, ...serviceData } : s));
+            // If editing, set pending data and open justification modal
+            setPendingServiceData(serviceData);
+            setJustification('');
+            setJustificationError('');
+            setIsJustificationModalOpen(true);
         } else {
-            // Create
+            // If creating, add directly
             const newService = {
                 id: Date.now(),
                 ...serviceData,
             };
             setServices([...services, newService]);
+            handleCloseModal();
         }
-        handleCloseModal();
     };
     
+    const handleConfirmSaveWithJustification = () => {
+        if (!justification.trim()) {
+            setJustificationError(t('common.justificationRequired'));
+            return;
+        }
+        
+        if (currentService && pendingServiceData) {
+             setServices(services.map(s => s.id === currentService.id ? { ...s, ...pendingServiceData } : s));
+        }
+
+        // Close all modals and reset states
+        setIsJustificationModalOpen(false);
+        handleCloseModal();
+        setJustification('');
+        setPendingServiceData(null);
+    };
+
     const handleDelete = (serviceId: number) => {
         if (window.confirm(t('services.deleteConfirm'))) {
             setServices(services.filter(s => s.id !== serviceId));
@@ -77,6 +104,29 @@ const ServicesPage: React.FC = () => {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleExportCSV = () => {
+        if (!services.length) return;
+        const filename = 'services.csv';
+        const headers = ['id', 'name', 'price'];
+        const csvContent = [
+            headers.join(','),
+            ...services.map(item => [
+                item.id,
+                `"${item.name.replace(/"/g, '""')}"`,
+                item.price
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
@@ -89,7 +139,7 @@ const ServicesPage: React.FC = () => {
                             <tr>
                                 <th scope="col" className="px-6 py-3">{t('services.serviceName')}</th>
                                 <th scope="col" className="px-6 py-3">{t('services.price')}</th>
-                                <th scope="col" className="px-6 py-3 text-right">{t('services.actions')}</th>
+                                <th scope="col" className="px-6 py-3 text-right">{t('common.actions')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -113,7 +163,8 @@ const ServicesPage: React.FC = () => {
                         </tbody>
                     </table>
                 </div>
-                <div className="mt-4 flex justify-end">
+                <div className="mt-4 flex justify-end space-x-2">
+                    <Button variant="secondary" onClick={handleExportCSV}>{t('common.exportCsv')}</Button>
                     <Button onClick={() => handleOpenModal(null)}>{t('services.addNew')}</Button>
                 </div>
             </Card>
@@ -139,6 +190,33 @@ const ServicesPage: React.FC = () => {
                     <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="secondary" onClick={handleCloseModal}>{t('common.cancel')}</Button>
                         <Button onClick={handleSave}>{t('common.save')}</Button>
+                    </div>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={isJustificationModalOpen}
+                onClose={() => setIsJustificationModalOpen(false)}
+                title={t('common.justification')}
+            >
+                <div className="space-y-4">
+                    <p>{t('services.editJustificationPrompt')}</p>
+                    <div>
+                        <textarea
+                            value={justification}
+                            onChange={(e) => {
+                                setJustification(e.target.value);
+                                if(justificationError) setJustificationError('');
+                            }}
+                            rows={4}
+                            className={`mt-1 block w-full rounded-md shadow-sm sm:text-sm dark:bg-gray-700 ${justificationError ? 'border-red-500 focus:border-red-500' : 'border-gray-300 dark:border-gray-600 focus:border-primary-500'}`}
+                            placeholder={t('common.justification')}
+                        />
+                         {justificationError && <p className="mt-1 text-sm text-red-600">{justificationError}</p>}
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-2">
+                        <Button type="button" variant="secondary" onClick={() => setIsJustificationModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button type="button" onClick={handleConfirmSaveWithJustification}>{t('common.confirm')}</Button>
                     </div>
                 </div>
             </Modal>

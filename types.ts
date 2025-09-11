@@ -2,6 +2,7 @@
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
+  Client = 'Client',
   Sales = 'Sales',
   Products = 'Products',
   Services = 'Services',
@@ -32,6 +33,19 @@ export interface Employee {
   address: string;
   phone: string;
   registrationData: string;
+}
+
+export interface Client {
+  id: number;
+  clientType: 'Individual' | 'Company';
+  fullName: string; // Individual's name or Company's contact person
+  address: string;
+  phone: string;
+  cpf?: string;
+  companyName?: string;
+  tradeName?: string;
+  cnpj?: string;
+  stateRegistration?: string;
 }
 
 export interface Product {

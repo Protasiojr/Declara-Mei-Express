@@ -1,3 +1,4 @@
+
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -7,11 +8,18 @@
     "editData": "Edit Data",
     "delete": "Delete",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "exportCsv": "Export to CSV",
+    "actions": "Actions",
+    "justification": "Justification",
+    "justificationPrompt": "Please provide a justification for the change.",
+    "justificationRequired": "Justification is required.",
+    "confirm": "Confirm"
   },
   "sidebar": {
     "dashboard": "Dashboard",
     "employee": "Employee",
+    "clients": "Clients",
     "sales": "Sales",
     "products": "Products",
     "services": "Services",
@@ -64,6 +72,30 @@
     "noEmployee": "No employee registered.",
     "confirmSave": "Do you want to save the changes?"
   },
+  "clients": {
+    "registry": "Client Registry",
+    "addNew": "Add New Client",
+    "fullName": "Full Name",
+    "address": "Address",
+    "phone": "Phone",
+    "registrationData": "Registration Data (CPF, CNPJ, etc.)",
+    "addClient": "Add Client",
+    "editClient": "Edit Client",
+    "noClients": "No clients registered.",
+    "deleteConfirmTitle": "Confirm Client Deletion",
+    "deleteConfirmPrompt": "To delete this client, please provide a justification.",
+    "clientType": "Client Type",
+    "individual": "Individual",
+    "company": "Company",
+    "companyName": "Company Name",
+    "tradeName": "Trade Name",
+    "cnpj": "CNPJ",
+    "stateRegistration": "State Registration",
+    "cpf": "CPF",
+    "contactPerson": "Contact Person",
+    "nameOrCompany": "Name / Company",
+    "document": "Document"
+  },
   "sales": {
     "title": "Sales and Services Provided",
     "registerNew": "Register New Sale / Service",
@@ -81,7 +113,20 @@
     "generateDaily": "Generate Daily JSON",
     "generateMonthly": "Generate Monthly JSON",
     "generateYearly": "Generate Yearly JSON",
-    "reportNote": "The monthly button is only enabled on the last day of the month. The yearly one, on the last day of the year. The daily one is always available for day-end closing."
+    "reportNote": "The monthly button is only enabled on the last day of the month. The yearly one, on the last day of the year. The daily one is always available for day-end closing.",
+    "registerNewSale": "Register New Sale",
+    "addSale": "Add Sale",
+    "editSale": "Edit Sale",
+    "deleteConfirm": "Are you sure you want to delete this sale?",
+    "selectItem": "Select an item",
+    "filterStartDate": "Start Date",
+    "filterEndDate": "End Date",
+    "filterItemType": "Item Type",
+    "filterAllItems": "All Items",
+    "filterProducts": "Products",
+    "filterServices": "Services",
+    "clearFilters": "Clear Filters",
+    "noResults": "No sales found matching your criteria."
   },
   "products": {
     "productName": "Product Name",
@@ -109,7 +154,8 @@
     "deleteConfirm": "Are you sure you want to delete this service?",
     "addService": "Add New Service",
     "editService": "Edit Service",
-    "noServices": "No services registered."
+    "noServices": "No services registered.",
+    "editJustificationPrompt": "Please provide a justification for editing this service."
   },
   "company": {
     "registrationInfo": "Registration Information",
@@ -136,7 +182,19 @@
     "annualDescription": "Add the monthly JSON files to generate the Annual MEI Declaration (DASN-SIMEI).",
     "generateAnnualButton": "Generate Annual Declaration",
     "download": "Download Generated Reports",
-    "downloadDescription": "Links to download the consolidated reports will be available here."
+    "downloadDescription": "Links to download the consolidated reports will be available here.",
+    "exportData": "Export Data",
+    "salesReport": "Sales Report",
+    "salesReportDescription": "Select a period to export the sales report in PDF format.",
+    "clientList": "Client List",
+    "clientListDescription": "Export a complete list of all registered clients in PDF format.",
+    "exportPdf": "Export to PDF",
+    "salesReportTitle": "Sales Report",
+    "clientListTitle": "Client List",
+    "period": "Period",
+    "to": "to",
+    "allSales": "All Sales",
+    "totalAmount": "Total Amount"
   },
   "settings": {
     "general": "General Settings",

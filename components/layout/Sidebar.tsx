@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Page } from '../../types';
-import { DashboardIcon, EmployeeIcon, SalesIcon, ProductsIcon, ServicesIcon, CompanyIcon, ProfileIcon, ReportIcon, SettingsIcon } from '../icons';
+import { DashboardIcon, EmployeeIcon, ClientIcon, SalesIcon, ProductsIcon, ServicesIcon, CompanyIcon, ProfileIcon, ReportIcon, SettingsIcon } from '../icons';
 import { useTranslation } from '../../hooks/useTranslation';
 
 interface SidebarProps {
@@ -38,6 +38,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
   const navItems = [
     { icon: <DashboardIcon />, page: Page.Dashboard, label: t('sidebar.dashboard') },
     { icon: <EmployeeIcon />, page: Page.Employee, label: t('sidebar.employee') },
+    { icon: <ClientIcon />, page: Page.Client, label: t('sidebar.clients') },
     { icon: <SalesIcon />, page: Page.Sales, label: t('sidebar.sales') },
     { icon: <ProductsIcon />, page: Page.Products, label: t('sidebar.products') },
     { icon: <ServicesIcon />, page: Page.Services, label: t('sidebar.services') },

@@ -1,5 +1,5 @@
 
-import { User, Company, Employee, Product, Service, Sale } from './types';
+import { User, Company, Employee, Product, Service, Sale, Client } from './types';
 
 export const MOCK_USER: User = {
   name: 'Usuário Padrão',
@@ -31,6 +31,28 @@ export const MOCK_EMPLOYEE: Employee = {
   phone: '(11) 98765-4321',
   registrationData: 'PIS: 123.45678.90-1, CTPS: 1234567-0001 SP',
 };
+
+export const MOCK_CLIENTS: Client[] = [
+  { 
+    id: 1, 
+    clientType: 'Individual',
+    fullName: 'Carlos Pereira', 
+    address: 'Rua das Palmeiras, 789, Rio de Janeiro, RJ', 
+    phone: '(21) 99876-5432', 
+    cpf: '123.456.789-00' 
+  },
+  { 
+    id: 2, 
+    clientType: 'Company',
+    companyName: 'ABC Logística Ltda',
+    tradeName: 'ABC Log',
+    cnpj: '98.765.432/0001-11',
+    stateRegistration: 'Isento',
+    fullName: 'Ana Souza', // Contact person
+    address: 'Avenida das Nações, 101, Brasília, DF', 
+    phone: '(61) 98765-1234'
+  },
+];
 
 export const MOCK_PRODUCTS: Product[] = [
   { id: 1, name: 'Produto A', price: 25.5, type: 'Regular' },

@@ -83,6 +83,29 @@ const ProductsPage: React.FC = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleExportCSV = (data: Product[], filename: string) => {
+        if (!data.length) return;
+        const headers = ['id', 'name', 'price', 'type'];
+        const csvContent = [
+            headers.join(','),
+            ...data.map(item => [
+                item.id,
+                `"${item.name.replace(/"/g, '""')}"`,
+                item.price,
+                item.type
+            ].join(','))
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const renderProductTable = (productList: Product[], title: string, productType: 'Regular' | 'Industrializado') => (
         <Card title={title}>
             <div className="overflow-x-auto">
@@ -115,7 +138,8 @@ const ProductsPage: React.FC = () => {
                     </tbody>
                 </table>
             </div>
-            <div className="mt-4 flex justify-end">
+            <div className="mt-4 flex justify-end space-x-2">
+                <Button variant="secondary" onClick={() => handleExportCSV(productList, `products_${productType.toLowerCase()}.csv`)}>{t('common.exportCsv')}</Button>
                 <Button onClick={() => handleOpenModal(null)}>{t('products.addNew')}</Button>
             </div>
         </Card>

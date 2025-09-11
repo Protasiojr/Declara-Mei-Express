@@ -5,6 +5,7 @@ import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardPage from './pages/DashboardPage';
 import EmployeePage from './pages/EmployeePage';
+import ClientPage from './pages/ClientPage';
 import SalesPage from './pages/SalesPage';
 import ProductsPage from './pages/ProductsPage';
 import ServicesPage from './pages/ServicesPage';
@@ -27,6 +28,8 @@ const App: React.FC = () => {
         return <DashboardPage />;
       case Page.Employee:
         return <EmployeePage />;
+      case Page.Client:
+        return <ClientPage />;
       case Page.Sales:
         return <SalesPage />;
       case Page.Products:
