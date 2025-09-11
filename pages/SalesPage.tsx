@@ -437,7 +437,6 @@ const SalesPage: React.FC = () => {
                                 className={`block w-full rounded-md shadow-sm dark:bg-gray-700 ${errors.itemId && !formData.itemId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
                             />
                             <Button type="button" variant="secondary" size="sm" onClick={() => handleOpenNewItemModal('product')}>{t('sales.registerNewProduct')}</Button>
-                            <Button type="button" variant="secondary" size="sm" onClick={() => handleOpenNewItemModal('service')}>{t('sales.registerNewService')}</Button>
                         </div>
                         {errors.itemId && !formData.itemId && <p className="text-sm text-red-500 mt-1">{errors.itemId}</p>}
                         {itemSearchResults.length > 0 && (
