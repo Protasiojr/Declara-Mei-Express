@@ -6,7 +6,7 @@ import { useTranslation } from '../hooks/useTranslation';
 import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
 import { Sale, Client, Product } from '../types';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 const ReportsPage: React.FC = () => {
     const { t } = useTranslation();
@@ -65,7 +65,7 @@ const ReportsPage: React.FC = () => {
         });
 
         let finalY = 0;
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: 42,
             head: head,
             body: body,
@@ -120,7 +120,7 @@ const ReportsPage: React.FC = () => {
             client.address
         ]);
         
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: 35,
             head: head,
             body: body,
@@ -161,7 +161,7 @@ const ReportsPage: React.FC = () => {
         
         const totalYear = Object.values(monthlyTotals).reduce((sum, total) => sum + total, 0);
         
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: 35,
             head: head,
             body: body,
@@ -229,7 +229,7 @@ const ReportsPage: React.FC = () => {
             [t('reports.serviceRevenue'), `R$ ${serviceRevenue.toFixed(2)}`],
         ];
 
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: 65,
             head: head,
             body: body,
@@ -241,7 +241,7 @@ const ReportsPage: React.FC = () => {
         const finalY = (doc as any).lastAutoTable.finalY || 0;
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: finalY,
             body: [[t('reports.totalGrossRevenue'), `R$ ${totalGrossRevenue.toFixed(2)}`]],
             theme: 'grid',
