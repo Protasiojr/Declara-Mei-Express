@@ -72,7 +72,10 @@
     "confirmSave": "Do you want to save the changes?",
     "vacationPeriod": "Vacation Period",
     "vacationStart": "Vacation Start",
-    "vacationEnd": "Vacation End"
+    "vacationEnd": "Vacation End",
+    "addSuccess": "Employee added successfully!",
+    "updateSuccess": "Employee updated successfully!",
+    "deleteSuccess": "Employee deleted successfully!"
   },
   "clients": {
     "registry": "Client Registry",
@@ -96,7 +99,9 @@
     "cpf": "CPF",
     "contactPerson": "Contact Person",
     "nameOrCompany": "Name / Company",
-    "document": "Document"
+    "document": "Document",
+    "addSuccess": "Client added successfully!",
+    "updateSuccess": "Client updated successfully!"
   },
   "sales": {
     "title": "Sales and Services Provided",
@@ -138,7 +143,10 @@
     "addNewItem": "Add New Item",
     "itemName": "Item Name",
     "itemPrice": "Price",
-    "itemType": "Item Type"
+    "itemType": "Item Type",
+    "addSuccess": "Sale registered successfully!",
+    "updateSuccess": "Sale updated successfully!",
+    "deleteSuccess": "Sale deleted successfully!"
   },
   "products": {
     "productName": "Product Name",
@@ -153,7 +161,10 @@
     "type": "Type",
     "typeRegular": "Resale",
     "typeIndustrialized": "Industrialized",
-    "noProducts": "No products registered."
+    "noProducts": "No products registered.",
+    "addSuccess": "Product added successfully!",
+    "updateSuccess": "Product updated successfully!",
+    "deleteSuccess": "Product deleted successfully!"
   },
   "services": {
     "serviceRegistry": "Service Registry",
@@ -175,7 +186,13 @@
     "noProvisions": "No service provisions registered.",
     "selectService": "Select a service",
     "editProvisionJustificationPrompt": "Please provide a justification for editing this service provision.",
-    "searchServicePlaceholder": "Search for service by name..."
+    "searchServicePlaceholder": "Search for service by name...",
+    "addSuccess": "Service added successfully!",
+    "updateSuccess": "Service updated successfully!",
+    "deleteSuccess": "Service deleted successfully!",
+    "addProvisionSuccess": "Service provision registered successfully!",
+    "updateProvisionSuccess": "Service provision updated successfully!",
+    "deleteProvisionSuccess": "Service provision deleted successfully!"
   },
   "company": {
     "registrationInfo": "Registration Information",

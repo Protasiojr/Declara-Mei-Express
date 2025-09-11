@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -6,6 +5,7 @@ import { Sale, Product, Service, Client } from '../types';
 import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CLIENTS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from '../components/ui/Modal';
+import { useToast } from '../context/ToastContext';
 
 type SaleFormData = {
   itemId: string;
@@ -20,6 +20,7 @@ type NewItemFormData = { name: string; price: string; type: 'Regular' | 'Industr
 
 const SalesPage: React.FC = () => {
     const { t } = useTranslation();
+    const toast = useToast();
     const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
     const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
     const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
@@ -191,6 +192,7 @@ const SalesPage: React.FC = () => {
                 client: formData.client
             };
             setSales(prev => [newSale, ...prev]);
+            toast.success(t('sales.addSuccess'));
             handleCloseModal();
         }
     };
@@ -215,6 +217,7 @@ const SalesPage: React.FC = () => {
                 client: formData.client
             };
             setSales(sales.map(s => s.id === currentSale.id ? updatedSale : s));
+            toast.success(t('sales.updateSuccess'));
         }
         
         setIsJustificationModalOpen(false);
@@ -222,9 +225,10 @@ const SalesPage: React.FC = () => {
     };
 
     const handleDelete = (saleId: number) => {
-        if (window.confirm(t('sales.deleteConfirm'))) {
+        toast.confirm(t('sales.deleteConfirm'), () => {
             setSales(sales.filter(s => s.id !== saleId));
-        }
+            toast.success(t('sales.deleteSuccess'));
+        });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

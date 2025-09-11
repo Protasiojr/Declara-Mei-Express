@@ -2,6 +2,7 @@ import React from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
+import { useToast } from '../context/ToastContext';
 
 interface SettingsPageProps {
   handleLogout: () => void;
@@ -9,11 +10,10 @@ interface SettingsPageProps {
 
 const SettingsPage: React.FC<SettingsPageProps> = ({ handleLogout }) => {
   const { t } = useTranslation();
+  const toast = useToast();
 
   const handleConfirmLogout = () => {
-    if (window.confirm(t('settings.logoutConfirm'))) {
-      handleLogout();
-    }
+    toast.confirm(t('settings.logoutConfirm'), handleLogout);
   };
 
   return (

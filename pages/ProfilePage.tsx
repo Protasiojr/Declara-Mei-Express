@@ -3,6 +3,7 @@ import { User } from '../types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
+import { useToast } from '../context/ToastContext';
 
 interface ProfilePageProps {
   user: User | null;
@@ -11,6 +12,7 @@ interface ProfilePageProps {
 
 const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
   const { t } = useTranslation();
+  const toast = useToast();
   
   if (!user) return null;
 
@@ -37,7 +39,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ user, setUser }) => {
     if (validate()) {
         setUser(prev => prev ? { ...prev, name: formData.name } : null);
         // Here you would typically also handle the password change logic
-        alert(t('profile.saveSuccess'));
+        toast.success(t('profile.saveSuccess'));
         setErrors({ name: '', newPassword: '' });
     }
   };

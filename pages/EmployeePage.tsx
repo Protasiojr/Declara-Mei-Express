@@ -5,11 +5,13 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from '../components/ui/Modal';
+import { useToast } from '../context/ToastContext';
 
 type EmployeeFormData = Omit<Employee, 'id'>;
 
 const EmployeePage: React.FC = () => {
   const { t } = useTranslation();
+  const toast = useToast();
   const [employee, setEmployee] = useState<Employee | null>(MOCK_EMPLOYEE);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -71,22 +73,30 @@ const EmployeePage: React.FC = () => {
     e.preventDefault();
     if (!validate()) return;
     
-    if (window.confirm(t('employee.confirmSave'))) {
-      const updatedEmployee = {
-        id: employee?.id || Date.now(),
-        ...formData,
-        vacationStart: formData.vacationStart || undefined,
-        vacationEnd: formData.vacationEnd || undefined,
-      };
-      setEmployee(updatedEmployee);
-      handleCloseModal();
+    const saveData = () => {
+        const updatedEmployee = {
+            id: employee?.id || Date.now(),
+            ...formData,
+            vacationStart: formData.vacationStart || undefined,
+            vacationEnd: formData.vacationEnd || undefined,
+        };
+        setEmployee(updatedEmployee);
+        toast.success(employee ? t('employee.updateSuccess') : t('employee.addSuccess'));
+        handleCloseModal();
+    }
+    
+    if(employee) {
+        toast.confirm(t('employee.confirmSave'), saveData);
+    } else {
+        saveData();
     }
   };
 
   const handleDelete = () => {
-    if(window.confirm(t('employee.confirmDelete'))){
+    toast.confirm(t('employee.confirmDelete'), () => {
         setEmployee(null);
-    }
+        toast.success(t('employee.deleteSuccess'));
+    });
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

@@ -1,10 +1,21 @@
 
+
 import React, { useState } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
-import { MOCK_SALES, MOCK_CLIENTS } from '../constants';
+import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
 import { Sale, Client } from '../types';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+
+// FIX: Changed interface to a type intersection. An interface extending a class in TypeScript only
+// inherits public properties, not methods. A type intersection combines the class type with
+// the new property, ensuring all jsPDF methods are available.
+// Adiciona a definição do método autoTable à interface do jsPDF para o TypeScript
+type jsPDFWithAutoTable = jsPDF & {
+  autoTable: (options: any) => jsPDF;
+}
 
 const ReportsPage: React.FC = () => {
     const { t } = useTranslation();
@@ -29,118 +40,113 @@ const ReportsPage: React.FC = () => {
         
         const getClientDisplayName = (client: Client | null) => {
             if (!client) return t('sales.clientTypeConsumer');
-            return client.clientType === 'Company' ? client.companyName : client.fullName;
+            return client.clientType === 'Company' ? (client.companyName || client.fullName) : client.fullName;
         }
 
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const { name: companyName, cnpj } = MOCK_COMPANY;
         const reportTitle = t('reports.salesReportTitle');
-        const dateRange = salesStartDate && salesEndDate ? `${t('reports.period')}: ${new Date(salesStartDate + 'T00:00:00').toLocaleDateString()} ${t('reports.to')} ${new Date(salesEndDate + 'T00:00:00').toLocaleDateString()}` : t('reports.allSales');
+        const dateRange = salesStartDate && salesEndDate 
+            ? `${t('reports.period')}: ${new Date(salesStartDate + 'T00:00:00').toLocaleDateString()} ${t('reports.to')} ${new Date(salesEndDate + 'T00:00:00').toLocaleDateString()}` 
+            : t('reports.allSales');
         
+        // Header
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+
+        doc.setFontSize(18);
+        doc.setTextColor(40);
+        doc.text(reportTitle, 14, 28);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(dateRange, 14, 35);
+
+        const head = [[
+            t('sales.item'),
+            t('sales.quantity'),
+            t('sales.date'),
+            t('sales.client'),
+            t('sales.total')
+        ]];
+
         let totalAmount = 0;
-        const salesRows = filteredSales.map(sale => {
+        const body = filteredSales.map(sale => {
             totalAmount += sale.total;
-            return `
-                <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${sale.item.name}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${sale.quantity}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${new Date(sale.date + 'T00:00:00').toLocaleDateString()}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${getClientDisplayName(sale.client)}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">R$ ${sale.total.toFixed(2)}</td>
-                </tr>
-            `;
-        }).join('');
+            return [
+                sale.item.name,
+                sale.quantity,
+                new Date(sale.date + 'T00:00:00').toLocaleDateString(),
+                getClientDisplayName(sale.client),
+                `R$ ${sale.total.toFixed(2)}`
+            ];
+        });
 
-        const reportContent = `
-            <html>
-                <head>
-                    <title>${reportTitle}</title>
-                    <style>
-                        body { font-family: sans-serif; margin: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                        th, td { text-align: left; padding: 8px; }
-                        th { background-color: #f2f2f2; }
-                        h1, h2 { text-align: center; }
-                        h2 { font-weight: normal; font-size: 1em; }
-                        .total { font-weight: bold; text-align: right; margin-top: 20px; font-size: 1.2em;}
-                    </style>
-                </head>
-                <body>
-                    <h1>${reportTitle}</h1>
-                    <h2>${dateRange}</h2>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('sales.item')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('sales.quantity')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('sales.date')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('sales.client')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; text-align: right;">${t('sales.total')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${salesRows}
-                        </tbody>
-                    </table>
-                    <div class="total">${t('reports.totalAmount')}: R$ ${totalAmount.toFixed(2)}</div>
-                </body>
-            </html>
-        `;
+        let finalY = 0;
+        doc.autoTable({
+            startY: 42,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [29, 78, 216] },
+            columnStyles: { 4: { halign: 'right' } },
+            didDrawPage: (data) => {
+                finalY = data.cursor?.y ?? 0;
+            }
+        });
+        
+        finalY = (doc as any).lastAutoTable.finalY || finalY;
 
-        const reportWindow = window.open('', '_blank');
-        reportWindow?.document.write(reportContent);
-        reportWindow?.document.close();
-        reportWindow?.focus();
-        setTimeout(() => { reportWindow?.print(); }, 500);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text(
+            `${t('reports.totalAmount')}: R$ ${totalAmount.toFixed(2)}`,
+            14,
+            finalY + 10
+        );
+        
+        doc.save('relatorio_vendas.pdf');
     };
 
     const handleExportClientsPDF = () => {
+        const doc = new jsPDF() as jsPDFWithAutoTable;
+        const { name: companyName, cnpj } = MOCK_COMPANY;
         const reportTitle = t('reports.clientListTitle');
-        const clientsRows = MOCK_CLIENTS.map(client => `
-            <tr>
-                <td style="border: 1px solid #ddd; padding: 8px;">${client.clientType === 'Company' ? client.companyName : client.fullName}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${client.clientType === 'Company' ? t('clients.company') : t('clients.individual')}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${client.clientType === 'Company' ? client.cnpj : client.cpf}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${client.phone}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">${client.address}</td>
-            </tr>
-        `).join('');
+        
+        // Header
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
 
-        const reportContent = `
-            <html>
-                <head>
-                    <title>${reportTitle}</title>
-                    <style>
-                        body { font-family: sans-serif; margin: 20px; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px;}
-                        th, td { text-align: left; padding: 8px; }
-                        th { background-color: #f2f2f2; }
-                        h1 { text-align: center; }
-                    </style>
-                </head>
-                <body>
-                    <h1>${reportTitle}</h1>
-                    <table>
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('clients.nameOrCompany')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('clients.clientType')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('clients.document')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('clients.phone')}</th>
-                                <th style="border: 1px solid #ddd; padding: 8px;">${t('clients.address')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${clientsRows}
-                        </tbody>
-                    </table>
-                </body>
-            </html>
-        `;
+        doc.setFontSize(18);
+        doc.setTextColor(40);
+        doc.text(reportTitle, 14, 28);
 
-        const reportWindow = window.open('', '_blank');
-        reportWindow?.document.write(reportContent);
-        reportWindow?.document.close();
-        reportWindow?.focus();
-        setTimeout(() => { reportWindow?.print(); }, 500);
+        const head = [[
+            t('clients.nameOrCompany'),
+            t('clients.clientType'),
+            t('clients.document'),
+            t('clients.phone'),
+            t('clients.address')
+        ]];
+        
+        const body = MOCK_CLIENTS.map(client => [
+            client.clientType === 'Company' ? (client.companyName || client.fullName) : client.fullName,
+            client.clientType === 'Company' ? t('clients.company') : t('clients.individual'),
+            client.clientType === 'Company' ? (client.cnpj || '-') : (client.cpf || '-'),
+            client.phone,
+            client.address
+        ]);
+        
+        doc.autoTable({
+            startY: 35,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [29, 78, 216] },
+        });
+
+        doc.save('lista_clientes.pdf');
     };
 
     return (

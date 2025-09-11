@@ -72,7 +72,10 @@
     "confirmSave": "Deseja salvar as alterações?",
     "vacationPeriod": "Período de Férias",
     "vacationStart": "Início das Férias",
-    "vacationEnd": "Fim das Férias"
+    "vacationEnd": "Fim das Férias",
+    "addSuccess": "Funcionário adicionado com sucesso!",
+    "updateSuccess": "Funcionário atualizado com sucesso!",
+    "deleteSuccess": "Funcionário excluído com sucesso!"
   },
   "clients": {
     "registry": "Cadastro de Clientes",
@@ -96,7 +99,9 @@
     "cpf": "CPF",
     "contactPerson": "Nome do Contato",
     "nameOrCompany": "Nome / Empresa",
-    "document": "Documento"
+    "document": "Documento",
+    "addSuccess": "Cliente adicionado com sucesso!",
+    "updateSuccess": "Cliente atualizado com sucesso!"
   },
   "sales": {
     "title": "Vendas e Serviços Prestados",
@@ -138,7 +143,10 @@
     "addNewItem": "Adicionar Novo Item",
     "itemName": "Nome do Item",
     "itemPrice": "Preço",
-    "itemType": "Tipo do Item"
+    "itemType": "Tipo do Item",
+    "addSuccess": "Venda registrada com sucesso!",
+    "updateSuccess": "Venda atualizada com sucesso!",
+    "deleteSuccess": "Venda excluída com sucesso!"
   },
   "products": {
     "productName": "Nome do Produto",
@@ -153,7 +161,10 @@
     "type": "Tipo",
     "typeRegular": "Revenda",
     "typeIndustrialized": "Industrializado",
-    "noProducts": "Nenhum produto cadastrado."
+    "noProducts": "Nenhum produto cadastrado.",
+    "addSuccess": "Produto adicionado com sucesso!",
+    "updateSuccess": "Produto atualizado com sucesso!",
+    "deleteSuccess": "Produto excluído com sucesso!"
   },
   "services": {
     "serviceRegistry": "Cadastro de Serviços",
@@ -175,7 +186,13 @@
     "noProvisions": "Nenhuma prestação de serviço registrada.",
     "selectService": "Selecione um serviço",
     "editProvisionJustificationPrompt": "Por favor, forneça uma justificativa para alterar esta prestação de serviço.",
-    "searchServicePlaceholder": "Buscar serviço por nome..."
+    "searchServicePlaceholder": "Buscar serviço por nome...",
+    "addSuccess": "Serviço adicionado com sucesso!",
+    "updateSuccess": "Serviço atualizado com sucesso!",
+    "deleteSuccess": "Serviço excluído com sucesso!",
+    "addProvisionSuccess": "Prestação de serviço registrada com sucesso!",
+    "updateProvisionSuccess": "Prestação de serviço atualizada com sucesso!",
+    "deleteProvisionSuccess": "Prestação de serviço excluída com sucesso!"
   },
   "company": {
     "registrationInfo": "Informações Cadastrais",

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Client } from '../types';
 import { MOCK_CLIENTS } from '../constants';
@@ -6,11 +5,13 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from '../components/ui/Modal';
+import { useToast } from '../context/ToastContext';
 
 type ClientFormData = Omit<Client, 'id'>;
 
 const ClientPage: React.FC = () => {
     const { t } = useTranslation();
+    const toast = useToast();
     const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isJustificationModalOpen, setIsJustificationModalOpen] = useState(false);
@@ -79,8 +80,10 @@ const ClientPage: React.FC = () => {
 
         if (currentClient) {
             setClients(clients.map(c => c.id === currentClient.id ? clientData : c));
+            toast.success(t('clients.updateSuccess'));
         } else {
             setClients([clientData, ...clients]);
+            toast.success(t('clients.addSuccess'));
         }
         handleCloseModal();
     };

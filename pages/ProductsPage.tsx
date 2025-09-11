@@ -4,6 +4,7 @@ import { MOCK_PRODUCTS } from '../constants';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
+import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
 
 const ProductsPage: React.FC = () => {
@@ -13,6 +14,7 @@ const ProductsPage: React.FC = () => {
     const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
     const [formData, setFormData] = useState({ name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado' });
     const [errors, setErrors] = useState({ name: '', price: '' });
+    const toast = useToast();
 
     const regularProducts = products.filter(p => p.type === 'Regular');
     const industrializedProducts = products.filter(p => p.type === 'Industrializado');
@@ -61,6 +63,7 @@ const ProductsPage: React.FC = () => {
         if (currentProduct) {
             // Update
             setProducts(products.map(p => p.id === currentProduct.id ? { ...p, ...productData } : p));
+            toast.success(t('products.updateSuccess'));
         } else {
             // Create
             const newProduct = {
@@ -68,14 +71,16 @@ const ProductsPage: React.FC = () => {
                 ...productData,
             };
             setProducts([...products, newProduct]);
+            toast.success(t('products.addSuccess'));
         }
         handleCloseModal();
     };
     
     const handleDelete = (productId: number) => {
-        if (window.confirm(t('products.deleteConfirm'))) {
+        toast.confirm(t('products.deleteConfirm'), () => {
             setProducts(products.filter(p => p.id !== productId));
-        }
+            toast.success(t('products.deleteSuccess'));
+        });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

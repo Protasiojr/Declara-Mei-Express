@@ -5,6 +5,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from '../components/ui/Modal';
+import { useToast } from '../context/ToastContext';
 
 type ClientFormData = Omit<Client, 'id'>;
 type ProvisionFormData = {
@@ -17,6 +18,7 @@ type ProvisionFormData = {
 
 const ServicesPage: React.FC = () => {
     const { t } = useTranslation();
+    const toast = useToast();
     const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
     const [serviceProvisions, setServiceProvisions] = useState<ServiceProvision[]>(MOCK_SERVICE_PROVISIONS);
     const [clients, setClients] = useState<Client[]>(MOCK_CLIENTS);
@@ -103,14 +105,16 @@ const ServicesPage: React.FC = () => {
             setIsJustificationModalOpen(true);
         } else {
             setServices([...services, { id: Date.now(), ...serviceData }]);
+            toast.success(t('services.addSuccess'));
             setIsCatalogModalOpen(false);
         }
     };
     
     const handleDeleteCatalog = (serviceId: number) => {
-        if (window.confirm(t('services.deleteConfirm'))) {
+        toast.confirm(t('services.deleteConfirm'), () => {
             setServices(services.filter(s => s.id !== serviceId));
-        }
+            toast.success(t('services.deleteSuccess'));
+        });
     };
 
     // --- Provision Functions ---
@@ -184,14 +188,16 @@ const ServicesPage: React.FC = () => {
                 client: provisionFormData.client
             };
             setServiceProvisions(prev => [newProvision, ...prev]);
+            toast.success(t('services.addProvisionSuccess'));
             setIsProvisionModalOpen(false);
         }
     };
     
     const handleDeleteProvision = (provisionId: number) => {
-        if (window.confirm(t('services.deleteProvisionConfirm'))) {
+        toast.confirm(t('services.deleteProvisionConfirm'), () => {
             setServiceProvisions(serviceProvisions.filter(p => p.id !== provisionId));
-        }
+            toast.success(t('services.deleteProvisionSuccess'));
+        });
     };
 
     const totalProvisionValue = useMemo(() => {
@@ -220,6 +226,7 @@ const ServicesPage: React.FC = () => {
         
         if (justificationAction === 'editCatalog' && currentService && pendingServiceData) {
             setServices(services.map(s => s.id === currentService.id ? { ...s, ...pendingServiceData } : s));
+            toast.success(t('services.updateSuccess'));
             setIsCatalogModalOpen(false);
         }
 
@@ -236,6 +243,7 @@ const ServicesPage: React.FC = () => {
                 client: provisionFormData.client
             };
             setServiceProvisions(serviceProvisions.map(p => p.id === currentProvision.id ? updatedProvision : p));
+            toast.success(t('services.updateProvisionSuccess'));
             setIsProvisionModalOpen(false);
         }
 
