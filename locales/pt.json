@@ -174,7 +174,8 @@
     "deleteProvisionConfirm": "Tem certeza que deseja excluir esta prestação de serviço?",
     "noProvisions": "Nenhuma prestação de serviço registrada.",
     "selectService": "Selecione um serviço",
-    "editProvisionJustificationPrompt": "Por favor, forneça uma justificativa para alterar esta prestação de serviço."
+    "editProvisionJustificationPrompt": "Por favor, forneça uma justificativa para alterar esta prestação de serviço.",
+    "searchServicePlaceholder": "Buscar serviço por nome..."
   },
   "company": {
     "registrationInfo": "Informações Cadastrais",

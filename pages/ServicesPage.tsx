@@ -35,6 +35,10 @@ const ServicesPage: React.FC = () => {
     const [provisionFormData, setProvisionFormData] = useState<ProvisionFormData>(initialProvisionForm);
     const [provisionErrors, setProvisionErrors] = useState<Partial<ProvisionFormData>>({});
 
+    // Service Search State
+    const [serviceSearch, setServiceSearch] = useState('');
+    const [serviceSearchResults, setServiceSearchResults] = useState<Service[]>([]);
+
     // Justification Modal State
     const [isJustificationModalOpen, setIsJustificationModalOpen] = useState(false);
     const [justification, setJustification] = useState('');
@@ -48,6 +52,25 @@ const ServicesPage: React.FC = () => {
     const initialClientFormData: ClientFormData = { clientType: 'Individual', fullName: '', address: '', phone: '', cpf: '', companyName: '', tradeName: '', cnpj: '', stateRegistration: '' };
     const [clientFormData, setClientFormData] = useState<ClientFormData>(initialClientFormData);
     const [clientErrors, setClientErrors] = useState<Partial<ClientFormData>>({});
+    
+     useEffect(() => {
+        if (serviceSearch.trim() === '') {
+            setServiceSearchResults([]);
+            return;
+        }
+        
+        const selectedService = services.find(s => String(s.id) === provisionFormData.serviceId);
+        if (selectedService && selectedService.name.toLowerCase() === serviceSearch.toLowerCase()) {
+            setServiceSearchResults([]);
+            return;
+        }
+
+        const lowercasedQuery = serviceSearch.toLowerCase();
+        const results = services.filter(service =>
+            service.name.toLowerCase().includes(lowercasedQuery)
+        );
+        setServiceSearchResults(results);
+    }, [serviceSearch, provisionFormData.serviceId, services]);
 
     // --- Catalog Functions ---
     const validateCatalog = () => {
@@ -118,11 +141,29 @@ const ServicesPage: React.FC = () => {
                 withInvoice: provision.withInvoice,
                 client: provision.client,
             });
+            setServiceSearch(provision.service.name);
         } else {
             setCurrentProvision(null);
             setProvisionFormData(initialProvisionForm);
+            setServiceSearch('');
         }
         setIsProvisionModalOpen(true);
+    };
+    
+    const handleServiceSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newSearchText = e.target.value;
+        setServiceSearch(newSearchText);
+
+        const currentService = services.find(s => String(s.id) === provisionFormData.serviceId);
+        if (currentService && currentService.name !== newSearchText) {
+            setProvisionFormData(prev => ({ ...prev, serviceId: '' }));
+        }
+    };
+
+    const handleSelectService = (service: Service) => {
+        setProvisionFormData(prev => ({ ...prev, serviceId: String(service.id) }));
+        setServiceSearch(service.name);
+        setServiceSearchResults([]);
     };
 
     const handleSaveProvision = () => {
@@ -314,13 +355,25 @@ const ServicesPage: React.FC = () => {
             {/* Provision Modal */}
             <Modal isOpen={isProvisionModalOpen} onClose={() => setIsProvisionModalOpen(false)} title={currentProvision ? t('services.editProvision') : t('services.registerProvision')}>
                  <div className="space-y-4">
-                    <div>
+                    <div className="relative">
                         <label className="block text-sm font-medium">{t('services.serviceName')}</label>
-                        <select name="serviceId" value={provisionFormData.serviceId} onChange={(e) => setProvisionFormData(p => ({...p, serviceId: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${provisionErrors.serviceId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}>
-                            <option value="">{t('services.selectService')}</option>
-                            {services.map(s => <option key={s.id} value={s.id}>{s.name} - R$ {s.price.toFixed(2)}</option>)}
-                        </select>
-                         {provisionErrors.serviceId && <p className="text-sm text-red-500 mt-1">{provisionErrors.serviceId}</p>}
+                        <input
+                            type="text"
+                            value={serviceSearch}
+                            onChange={handleServiceSearchChange}
+                            placeholder={t('services.searchServicePlaceholder')}
+                            className={`mt-1 block w-full rounded-md shadow-sm dark:bg-gray-700 ${provisionErrors.serviceId && !provisionFormData.serviceId ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}
+                        />
+                        {provisionErrors.serviceId && !provisionFormData.serviceId && <p className="text-sm text-red-500 mt-1">{provisionErrors.serviceId}</p>}
+                        {serviceSearchResults.length > 0 && (
+                            <ul className="absolute z-20 w-full bg-white dark:bg-gray-800 border dark:border-gray-600 rounded-md mt-1 max-h-40 overflow-y-auto shadow-lg">
+                                {serviceSearchResults.map(service => (
+                                    <li key={service.id} onClick={() => handleSelectService(service)} className="px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer">
+                                        {service.name} (R$ {service.price.toFixed(2)})
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                      <div>
                         <label className="block text-sm font-medium">{t('sales.quantity')}</label>
