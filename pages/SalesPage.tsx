@@ -1,9 +1,10 @@
 
-import React, { useState, useMemo } from 'react';
+
+import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod } from '../types';
-import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
+import { Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User } from '../types';
+import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER, MOCK_CASH_SESSIONS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
@@ -18,21 +19,48 @@ const SalesPage: React.FC = () => {
     const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
     const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
     const [clients] = useState<Client[]>(MOCK_CLIENTS);
+    const [user] = useState<User>(MOCK_USER);
 
     // POS states
     const [cart, setCart] = useState<SaleItem[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
+    // Cash Control State
+    const [cashSessions, setCashSessions] = useState<CashSession[]>(MOCK_CASH_SESSIONS);
+    const [currentCashSession, setCurrentCashSession] = useState<CashSession | null>(null);
+
     // Modal states
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+    const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(true);
+    const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
+    const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
     const [lastSale, setLastSale] = useState<Sale | null>(null);
+    
+    // Form & Calculation States
+    const [openingBalance, setOpeningBalance] = useState('');
+    const [movementType, setMovementType] = useState<'Supply' | 'Withdrawal'>('Supply');
+    const [movementAmount, setMovementAmount] = useState('');
+    const [movementDescription, setMovementDescription] = useState('');
+    const [countedBalance, setCountedBalance] = useState('');
     
     // Payment states
     const [payments, setPayments] = useState<Payment[]>([]);
     const [cashTendered, setCashTendered] = useState<number | null>(null);
+    
+    useEffect(() => {
+        // On load, check for an already open session (e.g., from a previous browser session)
+        const openSession = cashSessions.find(s => s.status === 'Open');
+        if (openSession) {
+            setCurrentCashSession(openSession);
+            setIsOpeningModalOpen(false);
+        } else {
+            setIsOpeningModalOpen(true);
+        }
+    }, []);
+
 
     const availableItems: (Product | Service)[] = useMemo(() => [...products, ...services], [products, services]);
 
@@ -61,6 +89,23 @@ const SalesPage: React.FC = () => {
 
         return { totalPaid: paid, changeDue: change > 0 ? change : 0, remainingAmount: remaining > 0 ? remaining : 0 };
     }, [payments, total, cashTendered]);
+
+    const cashClosingTotals = useMemo(() => {
+        if (!currentCashSession) return { sales: 0, supplies: 0, withdrawals: 0, expected: 0 };
+        const opening = currentCashSession.openingBalance;
+        let sales = 0;
+        let supplies = 0;
+        let withdrawals = 0;
+
+        currentCashSession.transactions.forEach(tx => {
+            if (tx.type === 'Sale') sales += tx.amount;
+            if (tx.type === 'Supply') supplies += tx.amount;
+            if (tx.type === 'Withdrawal') withdrawals += tx.amount;
+        });
+
+        const expected = opening + sales + supplies - withdrawals;
+        return { sales, supplies, withdrawals, expected };
+    }, [currentCashSession]);
 
     const addToCart = (item: Product | Service) => {
         setCart(currentCart => {
@@ -133,7 +178,24 @@ const SalesPage: React.FC = () => {
             return;
         }
 
-        // 1. Update stock
+        const newSaleId = Date.now();
+        
+        // 1. Update Cash Session Transaction
+        const cashPayment = payments.find(p => p.method === 'Cash');
+        if (cashPayment && cashPayment.amount > 0 && currentCashSession) {
+             const newTransaction: CashTransaction = {
+                id: Date.now(),
+                type: 'Sale',
+                amount: cashPayment.amount - changeDue,
+                timestamp: new Date().toISOString(),
+                description: `Venda #${newSaleId}`,
+                operatorName: user.name,
+                saleId: newSaleId
+            };
+            setCurrentCashSession(prev => prev ? {...prev, transactions: [...prev.transactions, newTransaction]} : null);
+        }
+
+        // 2. Update stock
         setProducts(currentProducts => {
             const newProducts = [...currentProducts];
             cart.forEach(cartItem => {
@@ -147,9 +209,9 @@ const SalesPage: React.FC = () => {
             return newProducts;
         });
 
-        // 2. Create Sale object
+        // 3. Create Sale object
         const newSale: Sale = {
-            id: Date.now(),
+            id: newSaleId,
             items: cart,
             subtotal,
             discount: 0,
@@ -157,29 +219,106 @@ const SalesPage: React.FC = () => {
             payments,
             changeDue,
             date: new Date().toISOString().split('T')[0],
-            withInvoice: false, // Defaulting this, can be added to UI
+            withInvoice: false,
             client: selectedClient
         };
         
-        // 3. Save sale
         setSales(prev => [newSale, ...prev]);
         setLastSale(newSale);
 
-        // 4. Reset POS state
         setCart([]);
         setPayments([]);
         setCashTendered(null);
         setSelectedClient(null);
         setIsPaymentModalOpen(false);
-        setIsReceiptModalOpen(true); // Open receipt modal
+        setIsReceiptModalOpen(true);
         toast.success(t('sales.saleCompleted'));
     };
     
+    const handleOpenCash = () => {
+        const balance = parseFloat(openingBalance);
+        if (isNaN(balance) || balance < 0) {
+            toast.error(t('cashControl.invalidOpeningBalance'));
+            return;
+        }
+        const openingTransaction: CashTransaction = {
+            id: Date.now(),
+            type: 'Opening',
+            amount: balance,
+            timestamp: new Date().toISOString(),
+            description: t('cashControl.cashOpened'),
+            operatorName: user.name,
+        }
+        const newSession: CashSession = {
+            id: Date.now(),
+            operatorName: user.name,
+            openingBalance: balance,
+            openedAt: new Date().toISOString(),
+            status: 'Open',
+            transactions: [openingTransaction]
+        };
+        setCurrentCashSession(newSession);
+        setIsOpeningModalOpen(false);
+        setOpeningBalance('');
+        toast.success(t('cashControl.cashOpenedSuccess'));
+    };
+    
+    const handleCashMovement = () => {
+        const amount = parseFloat(movementAmount);
+        if(isNaN(amount) || amount <= 0) {
+            toast.error(t('cashControl.invalidAmount'));
+            return;
+        }
+        if(!movementDescription.trim()) {
+            toast.error(t('validation.requiredDescription'));
+            return;
+        }
+        
+        if (currentCashSession) {
+            const newTransaction: CashTransaction = {
+                id: Date.now(),
+                type: movementType,
+                amount,
+                timestamp: new Date().toISOString(),
+                description: movementDescription,
+                operatorName: user.name
+            };
+             setCurrentCashSession(prev => prev ? {...prev, transactions: [...prev.transactions, newTransaction]} : null);
+             toast.success(t('cashControl.movementSuccess'));
+             setIsMovementModalOpen(false);
+             setMovementAmount('');
+             setMovementDescription('');
+        }
+    };
+    
+    const handleFinalizeCloseCash = () => {
+        const counted = parseFloat(countedBalance);
+        if (isNaN(counted) || counted < 0) {
+            toast.error(t('cashControl.invalidCountedBalance'));
+            return;
+        }
+
+        if (currentCashSession) {
+            const closedSession: CashSession = {
+                ...currentCashSession,
+                status: 'Closed',
+                closedAt: new Date().toISOString(),
+                closingBalance: counted,
+                expectedBalance: cashClosingTotals.expected,
+                difference: counted - cashClosingTotals.expected
+            };
+            setCashSessions(prev => [...prev.filter(s => s.id !== closedSession.id), closedSession]);
+            setCurrentCashSession(null);
+            setIsClosingModalOpen(false);
+            setCountedBalance('');
+            toast.success(t('cashControl.cashClosedSuccess'));
+        }
+    }
+
     const generateReceiptPDF = (sale: Sale) => {
         const doc = new jsPDF();
         const { name: companyName, cnpj, address } = MOCK_COMPANY;
 
-        // Header
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
         doc.text(companyName, doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
@@ -189,11 +328,9 @@ const SalesPage: React.FC = () => {
         doc.text(`${address.street}, ${address.number} - ${address.city}`, doc.internal.pageSize.getWidth() / 2, 24, { align: 'center' });
         doc.text(`${t('sales.nonFiscalDocument')}`, doc.internal.pageSize.getWidth() / 2, 30, { align: 'center' });
         
-        // Sale Info
         doc.text(`ID: ${sale.id}`, 14, 40);
         doc.text(`${t('sales.date')}: ${new Date(sale.date + 'T00:00:00').toLocaleDateString()}`, doc.internal.pageSize.getWidth() - 14, 40, { align: 'right' });
 
-        // Items Table
         autoTable(doc, {
             startY: 45,
             head: [[t('sales.item'), t('sales.quantity'), 'UN', t('sales.total')]],
@@ -205,13 +342,11 @@ const SalesPage: React.FC = () => {
 
         let finalY = (doc as any).lastAutoTable.finalY + 5;
 
-        // Totals
         doc.setFontSize(10);
         doc.text(`${t('sales.subtotal')}: R$ ${sale.subtotal.toFixed(2)}`, doc.internal.pageSize.getWidth() - 14, finalY, { align: 'right' });
         doc.setFont('helvetica', 'bold');
         doc.text(`${t('sales.total')}: R$ ${sale.total.toFixed(2)}`, doc.internal.pageSize.getWidth() - 14, finalY + 5, { align: 'right' });
         
-        // Payments
         finalY += 15;
         doc.setFont('helvetica', 'bold');
         doc.text(t('sales.paymentDetails'), 14, finalY);
@@ -227,6 +362,31 @@ const SalesPage: React.FC = () => {
 
         doc.save(`recibo_venda_${sale.id}.pdf`);
     };
+    
+    if (!currentCashSession) {
+        return (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center">
+                 <Modal isOpen={isOpeningModalOpen} onClose={() => {}} title={t('cashControl.openCash')}>
+                    <div className="space-y-4">
+                        <p>{t('cashControl.openCashPrompt')}</p>
+                        <div>
+                            <label className="block text-sm font-medium">{t('cashControl.openingBalance')}</label>
+                            <input
+                                type="number"
+                                value={openingBalance}
+                                onChange={(e) => setOpeningBalance(e.target.value)}
+                                placeholder='100.00'
+                                className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"
+                            />
+                        </div>
+                        <div className="flex justify-end">
+                            <Button onClick={handleOpenCash}>{t('cashControl.openCash')}</Button>
+                        </div>
+                    </div>
+                </Modal>
+            </div>
+        )
+    }
 
     return (
         <div className="flex flex-col md:flex-row h-full gap-4 -m-6 p-2">
@@ -256,13 +416,13 @@ const SalesPage: React.FC = () => {
                 </div>
             </div>
 
-            {/* Right side: Cart */}
+            {/* Right side: Cart & Cash Control */}
             <div className="w-full md:w-2/5 lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col p-4">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center">
                     <h2 className="text-xl font-bold">{t('sales.currentSale')}</h2>
                     <Button onClick={() => setIsHistoryModalOpen(true)} variant="secondary">{t('sales.saleHistory')}</Button>
                 </div>
-                <div className="flex-grow overflow-y-auto border-y dark:border-gray-700 -mx-4 px-4 py-2">
+                 <div className="flex-grow overflow-y-auto border-y dark:border-gray-700 -mx-4 px-4 py-2 my-4">
                     {cart.length === 0 ? (
                         <p className="text-gray-500 text-center py-10">{t('sales.emptyCart')}</p>
                     ) : (
@@ -285,18 +445,33 @@ const SalesPage: React.FC = () => {
                         ))
                     )}
                 </div>
-                <div className="pt-4">
-                    <div className="flex justify-between mb-2">
+
+                <div className="space-y-2 mb-4">
+                    <div className="flex justify-between">
                         <span>{t('sales.subtotal')}</span>
                         <span>R$ {subtotal.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-2xl font-bold mb-4">
+                    <div className="flex justify-between text-2xl font-bold">
                         <span>{t('sales.total')}</span>
                         <span>R$ {total.toFixed(2)}</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button variant="danger" onClick={cancelSale} disabled={cart.length === 0}>{t('sales.cancelSale')}</Button>
-                        <Button onClick={handlePayment} disabled={cart.length === 0}>{t('sales.finalizePayment')}</Button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 mb-4">
+                    <Button variant="danger" onClick={cancelSale} disabled={cart.length === 0}>{t('sales.cancelSale')}</Button>
+                    <Button onClick={handlePayment} disabled={cart.length === 0}>{t('sales.finalizePayment')}</Button>
+                </div>
+                
+                {/* Cash Control Panel */}
+                <div className="border-t dark:border-gray-700 pt-4 mt-auto space-y-2 text-sm">
+                    <h3 className="font-bold text-base mb-2">{t('cashControl.title')}</h3>
+                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.status')}</span> <span className="font-semibold text-green-500">{t('cashControl.statusOpen')}</span></div>
+                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.operator')}</span> <span>{currentCashSession.operatorName}</span></div>
+                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.openedAt')}</span> <span>{new Date(currentCashSession.openedAt).toLocaleTimeString()}</span></div>
+                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.openingBalance')}</span> <span>R$ {currentCashSession.openingBalance.toFixed(2)}</span></div>
+                     <div className="grid grid-cols-2 gap-2 mt-2">
+                        <Button variant="secondary" onClick={() => setIsMovementModalOpen(true)}>{t('cashControl.cashMovement')}</Button>
+                        <Button variant="primary" onClick={() => setIsClosingModalOpen(true)}>{t('cashControl.closeCash')}</Button>
                     </div>
                 </div>
             </div>
@@ -398,6 +573,63 @@ const SalesPage: React.FC = () => {
                     </div>
                 </div>
              </Modal>
+             
+             {/* Cash Movement Modal */}
+            <Modal isOpen={isMovementModalOpen} onClose={() => setIsMovementModalOpen(false)} title={t('cashControl.cashMovement')}>
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <label className="flex items-center"><input type="radio" name="movementType" checked={movementType === 'Supply'} onChange={() => setMovementType('Supply')} /><span className="ml-2">{t('cashControl.supply')}</span></label>
+                        <label className="flex items-center"><input type="radio" name="movementType" checked={movementType === 'Withdrawal'} onChange={() => setMovementType('Withdrawal')} /><span className="ml-2">{t('cashControl.withdrawal')}</span></label>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">{t('cashControl.amount')}</label>
+                        <input type="number" value={movementAmount} onChange={e => setMovementAmount(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">{t('cashControl.description')}</label>
+                        <input type="text" value={movementDescription} onChange={e => setMovementDescription(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                    </div>
+                    <div className="flex justify-end pt-2 space-x-2">
+                        <Button variant="secondary" onClick={() => setIsMovementModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleCashMovement}>{t('common.confirm')}</Button>
+                    </div>
+                </div>
+            </Modal>
+
+            {/* Close Cash Modal */}
+            <Modal isOpen={isClosingModalOpen} onClose={() => setIsClosingModalOpen(false)} title={t('cashControl.closeCashSummary')}>
+                 <div className="space-y-3 text-sm">
+                    <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md space-y-2">
+                        <div className="flex justify-between"><span>{t('cashControl.openingBalance')}</span> <span>R$ {currentCashSession.openingBalance.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-green-600 dark:text-green-400"><span>(+) {t('cashControl.salesInCash')}</span> <span>R$ {cashClosingTotals.sales.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-green-600 dark:text-green-400"><span>(+) {t('cashControl.supplies')}</span> <span>R$ {cashClosingTotals.supplies.toFixed(2)}</span></div>
+                        <div className="flex justify-between text-red-600 dark:text-red-400"><span>(-) {t('cashControl.withdrawals')}</span> <span>R$ {cashClosingTotals.withdrawals.toFixed(2)}</span></div>
+                    </div>
+                    <div className="flex justify-between font-bold text-base p-3 bg-gray-100 dark:bg-gray-700 rounded-md">
+                        <span>{t('cashControl.expectedBalance')}</span> 
+                        <span>R$ {cashClosingTotals.expected.toFixed(2)}</span>
+                    </div>
+                     <div>
+                        <label className="block font-medium text-base">{t('cashControl.countedBalance')}</label>
+                        <input type="number" value={countedBalance} onChange={e => setCountedBalance(e.target.value)} className="mt-1 block w-full text-lg p-2 rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                    </div>
+                    {countedBalance && (
+                        <div className={`flex justify-between font-bold text-base p-3 rounded-md ${(parseFloat(countedBalance) - cashClosingTotals.expected) !== 0 ? 'bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300' : 'bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300'}`}>
+                            <span>{t('cashControl.difference')}</span> 
+                            <span>
+                                R$ {(parseFloat(countedBalance) - cashClosingTotals.expected).toFixed(2)}
+                                <span className="text-xs ml-1">
+                                    ({(parseFloat(countedBalance) - cashClosingTotals.expected) > 0 ? t('cashControl.surplus') : t('cashControl.shortage')})
+                                </span>
+                            </span>
+                        </div>
+                    )}
+                     <div className="flex justify-end pt-4 space-x-2">
+                        <Button variant="secondary" onClick={() => setIsClosingModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleFinalizeCloseCash}>{t('cashControl.confirmCloseCash')}</Button>
+                    </div>
+                </div>
+            </Modal>
         </div>
     );
 };

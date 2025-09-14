@@ -1,4 +1,5 @@
 
+
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -158,7 +159,8 @@
     "saleCompleted": "Venda finalizada com sucesso!",
     "receiptPrompt": "Deseja imprimir o recibo?",
     "printReceipt": "Imprimir Recibo",
-    "nonFiscalDocument": "Documento não fiscal"
+    "nonFiscalDocument": "Documento não fiscal",
+    "paymentDetails": "Detalhes do Pagamento"
   },
   "products": {
     "title": "Produtos",
@@ -246,7 +248,12 @@
     "resaleRevenue": "Revenda de mercadorias",
     "industrializedRevenue": "Venda de produtos industrializados",
     "serviceRevenue": "Prestação de serviços",
-    "totalGrossRevenue": "Receita Bruta Total"
+    "totalGrossRevenue": "Receita Bruta Total",
+    "cashSessionsReport": "Relatório de Sessões de Caixa",
+    "cashSessionsReportDescription": "Exporte um histórico de todas as sessões de caixa, incluindo aberturas, fechamentos e diferenças.",
+    "cashSessionsReportTitle": "Relatório de Sessões de Caixa",
+    "opened": "Abertura",
+    "closed": "Fechamento"
   },
   "settings": {
     "general": "Configurações Gerais",
@@ -264,6 +271,40 @@
     "passwordMinLength": "A senha deve ter pelo menos 6 caracteres.",
     "invalidPrice": "Por favor, insira um preço válido maior que zero.",
     "endDateAfterStartDate": "A data final deve ser posterior à data inicial.",
-    "invalidStock": "Por favor, insira um valor de estoque válido (0 ou maior)."
+    "invalidStock": "Por favor, insira um valor de estoque válido (0 ou maior).",
+    "requiredDescription": "A descrição é obrigatória."
+  },
+  "cashControl": {
+    "title": "Controle de Caixa",
+    "status": "Status",
+    "statusOpen": "Aberto",
+    "operator": "Operador",
+    "openedAt": "Abertura",
+    "openingBalance": "Saldo Inicial",
+    "cashMovement": "Movimentar Caixa",
+    "closeCash": "Fechar Caixa",
+    "openCash": "Abrir Caixa",
+    "openCashPrompt": "Para iniciar as vendas, você precisa abrir o caixa.",
+    "invalidOpeningBalance": "Por favor, insira um saldo de abertura válido.",
+    "cashOpened": "Abertura de caixa",
+    "cashOpenedSuccess": "Caixa aberto com sucesso!",
+    "supply": "Suprimento",
+    "withdrawal": "Sangria",
+    "amount": "Valor",
+    "description": "Descrição",
+    "invalidAmount": "Por favor, insira um valor válido.",
+    "movementSuccess": "Movimentação registrada com sucesso!",
+    "closeCashSummary": "Resumo de Fechamento de Caixa",
+    "salesInCash": "Vendas (Dinheiro)",
+    "supplies": "Suprimentos",
+    "withdrawals": "Sangrias",
+    "expectedBalance": "Saldo Esperado",
+    "countedBalance": "Valor Contado",
+    "invalidCountedBalance": "Por favor, insira o valor contado em caixa.",
+    "difference": "Diferença",
+    "surplus": "Sobra",
+    "shortage": "Falta",
+    "confirmCloseCash": "Confirmar Fechamento",
+    "cashClosedSuccess": "Caixa fechado com sucesso!"
   }
 }

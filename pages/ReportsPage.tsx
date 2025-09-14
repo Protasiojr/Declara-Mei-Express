@@ -1,9 +1,10 @@
 
+
 import React, { useState } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
-import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
+import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_CASH_SESSIONS } from '../constants';
 import { Sale, Client, Product, Address, Service } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -256,6 +257,46 @@ const ReportsPage: React.FC = () => {
 
         doc.save('declaracao_anual_mei.pdf');
     };
+    
+    const handleExportCashSessionsPDF = () => {
+        const doc = new jsPDF();
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+        
+        doc.setFontSize(10);
+        doc.setTextColor(150);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+        doc.setFontSize(18);
+        doc.setTextColor(40);
+        doc.text(t('reports.cashSessionsReportTitle'), 14, 28);
+
+        const head = [[
+            t('cashControl.operator'),
+            t('reports.opened'),
+            t('reports.closed'),
+            t('cashControl.expectedBalance'),
+            t('cashControl.countedBalance'),
+            t('cashControl.difference')
+        ]];
+        
+        const body = MOCK_CASH_SESSIONS.map(session => [
+            session.operatorName,
+            new Date(session.openedAt).toLocaleString(),
+            session.closedAt ? new Date(session.closedAt).toLocaleString() : '-',
+            `R$ ${session.expectedBalance?.toFixed(2) || '0.00'}`,
+            `R$ ${session.closingBalance?.toFixed(2) || '0.00'}`,
+            `R$ ${session.difference?.toFixed(2) || '0.00'}`
+        ]);
+        
+        autoTable(doc, {
+            startY: 35,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [29, 78, 216] },
+        });
+
+        doc.save('relatorio_sessoes_caixa.pdf');
+    };
 
 
     return (
@@ -277,6 +318,16 @@ const ReportsPage: React.FC = () => {
                                 <input type="date" name="salesEndDate" value={salesEndDate} onChange={(e) => setSalesEndDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
                             </div>
                             <Button onClick={handleExportSalesPDF}>{t('reports.exportPdf')}</Button>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
+                    <div>
+                        <h4 className="font-semibold text-lg">{t('reports.cashSessionsReport')}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.cashSessionsReportDescription')}</p>
+                        <div className="flex justify-start">
+                            <Button onClick={handleExportCashSessionsPDF}>{t('reports.exportPdf')}</Button>
                         </div>
                     </div>
 

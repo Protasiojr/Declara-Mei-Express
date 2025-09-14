@@ -1,6 +1,7 @@
 
 
 
+
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
@@ -31,7 +32,7 @@ export interface Address {
 }
 
 export interface Company {
-  name: string;
+  name:string;
   entrepreneur: string;
   cnpj: string;
   creationDate: string;
@@ -82,7 +83,7 @@ export interface Service {
   price: number;
 }
 
-// FIX: Added missing ServiceProvision interface.
+// FIX: Add ServiceProvision interface for ServicesPage.
 export interface ServiceProvision {
   id: number;
   service: Service;
@@ -118,4 +119,29 @@ export interface Sale {
   date: string;
   withInvoice: boolean;
   client: Client | null;
+}
+
+export type CashTransactionType = 'Opening' | 'Supply' | 'Withdrawal' | 'Sale';
+
+export interface CashTransaction {
+  id: number;
+  type: CashTransactionType;
+  amount: number; // Always positive. For withdrawals, the logic will treat it as negative.
+  timestamp: string;
+  description: string;
+  operatorName: string;
+  saleId?: number;
+}
+
+export interface CashSession {
+  id: number;
+  operatorName: string;
+  openingBalance: number;
+  closingBalance?: number;
+  expectedBalance?: number;
+  difference?: number;
+  openedAt: string;
+  closedAt?: string;
+  status: 'Open' | 'Closed';
+  transactions: CashTransaction[];
 }

@@ -2,8 +2,10 @@
 
 
 
-// FIX: Import the missing ServiceProvision type.
-import { User, Company, Employee, Product, Service, Sale, Client, Address, ServiceProvision } from './types';
+
+
+// FIX: Import the ServiceProvision type.
+import { User, Company, Employee, Product, Service, Sale, Client, Address, CashSession, ServiceProvision } from './types';
 
 export const MOCK_USER: User = {
   name: 'Usuário Padrão',
@@ -107,6 +109,37 @@ export const MOCK_SERVICES: Service[] = [
   { id: 3, name: 'Design Gráfico - Logotipo', price: 300.00 },
 ];
 
+// FIX: Add MOCK_SERVICE_PROVISIONS for ServicesPage.
+export const MOCK_SERVICE_PROVISIONS: ServiceProvision[] = [
+    {
+        id: 1,
+        service: MOCK_SERVICES[0], // Consultoria de Marketing
+        quantity: 1,
+        total: 150.00,
+        date: '2025-07-15',
+        withInvoice: true,
+        client: MOCK_CLIENTS[1] // Construções ABC Ltda.
+    },
+    {
+        id: 2,
+        service: MOCK_SERVICES[2], // Design Gráfico - Logotipo
+        quantity: 1,
+        total: 300.00,
+        date: '2025-07-10',
+        withInvoice: true,
+        client: MOCK_CLIENTS[1] // Construções ABC Ltda.
+    },
+    {
+        id: 3,
+        service: MOCK_SERVICES[1], // Manutenção de Computador
+        quantity: 2,
+        total: 160.00,
+        date: '2025-06-28',
+        withInvoice: false,
+        client: MOCK_CLIENTS[0] // Carlos Pereira
+    }
+];
+
 export const MOCK_SALES: Sale[] = [
   { 
     id: 1, 
@@ -166,33 +199,39 @@ export const MOCK_SALES: Sale[] = [
     client: null 
   },
 ];
-// FIX: Add missing MOCK_SERVICE_PROVISIONS constant.
-export const MOCK_SERVICE_PROVISIONS: ServiceProvision[] = [
+
+export const MOCK_CASH_SESSIONS: CashSession[] = [
     {
         id: 1,
-        service: MOCK_SERVICES[1], // Manutenção de Computador
-        quantity: 1,
-        total: 80.00,
-        date: '2025-07-21',
-        withInvoice: true,
-        client: MOCK_CLIENTS[1] // Construções ABC Ltda.
+        operatorName: 'Administrador',
+        openingBalance: 100.00,
+        closingBalance: 855.50,
+        expectedBalance: 855.50,
+        difference: 0,
+        openedAt: '2025-07-20T09:00:00Z',
+        closedAt: '2025-07-20T18:00:00Z',
+        status: 'Closed',
+        transactions: [
+            { id: 1, type: 'Opening', amount: 100.00, timestamp: '2025-07-20T09:00:00Z', description: 'Abertura de caixa', operatorName: 'Administrador' },
+            { id: 2, type: 'Sale', amount: 75.50, timestamp: '2025-07-20T10:30:00Z', description: 'Venda #101', operatorName: 'Administrador', saleId: 101 },
+            { id: 3, type: 'Supply', amount: 200.00, timestamp: '2025-07-20T11:00:00Z', description: 'Suprimento para troco', operatorName: 'Administrador' },
+            { id: 4, type: 'Withdrawal', amount: 100.00, timestamp: '2025-07-20T15:00:00Z', description: 'Sangria para depósito', operatorName: 'Administrador' },
+            { id: 5, type: 'Sale', amount: 580.00, timestamp: '2025-07-20T16:45:00Z', description: 'Venda #102', operatorName: 'Administrador', saleId: 102 }
+        ]
     },
     {
         id: 2,
-        service: MOCK_SERVICES[0], // Consultoria de Marketing
-        quantity: 2,
-        total: 300.00,
-        date: '2025-07-20',
-        withInvoice: false,
-        client: MOCK_CLIENTS[2] // Joana Martins
-    },
-    {
-        id: 3,
-        service: MOCK_SERVICES[2], // Design Gráfico - Logotipo
-        quantity: 1,
-        total: 300.00,
-        date: '2025-07-15',
-        withInvoice: true,
-        client: null
+        operatorName: 'Usuário Padrão',
+        openingBalance: 150.00,
+        closingBalance: 445.00,
+        expectedBalance: 450.00,
+        difference: -5.00,
+        openedAt: '2025-07-21T09:00:00Z',
+        closedAt: '2025-07-21T18:00:00Z',
+        status: 'Closed',
+        transactions: [
+             { id: 6, type: 'Opening', amount: 150.00, timestamp: '2025-07-21T09:00:00Z', description: 'Abertura de caixa', operatorName: 'Usuário Padrão' },
+             { id: 7, type: 'Sale', amount: 300.00, timestamp: '2025-07-21T14:00:00Z', description: 'Venda #103', operatorName: 'Usuário Padrão', saleId: 103 }
+        ]
     }
 ];

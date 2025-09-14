@@ -1,4 +1,5 @@
 
+
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -158,7 +159,8 @@
     "saleCompleted": "Sale completed successfully!",
     "receiptPrompt": "Do you want to print the receipt?",
     "printReceipt": "Print Receipt",
-    "nonFiscalDocument": "Non-fiscal document"
+    "nonFiscalDocument": "Non-fiscal document",
+    "paymentDetails": "Payment Details"
   },
   "products": {
     "title": "Products",
@@ -246,7 +248,12 @@
     "resaleRevenue": "Resale of merchandise",
     "industrializedRevenue": "Sale of industrialized products",
     "serviceRevenue": "Provision of services",
-    "totalGrossRevenue": "Total Gross Revenue"
+    "totalGrossRevenue": "Total Gross Revenue",
+    "cashSessionsReport": "Cash Sessions Report",
+    "cashSessionsReportDescription": "Export a history of all cash register sessions, including openings, closings, and differences.",
+    "cashSessionsReportTitle": "Cash Sessions Report",
+    "opened": "Opened",
+    "closed": "Closed"
   },
   "settings": {
     "general": "General Settings",
@@ -264,6 +271,40 @@
     "passwordMinLength": "Password must be at least 6 characters long.",
     "invalidPrice": "Please enter a valid price greater than zero.",
     "endDateAfterStartDate": "The end date must be after the start date.",
-    "invalidStock": "Please enter a valid stock value (0 or greater)."
+    "invalidStock": "Please enter a valid stock value (0 or greater).",
+    "requiredDescription": "Description is required."
+  },
+  "cashControl": {
+    "title": "Cash Control",
+    "status": "Status",
+    "statusOpen": "Open",
+    "operator": "Operator",
+    "openedAt": "Opened At",
+    "openingBalance": "Opening Balance",
+    "cashMovement": "Cash In/Out",
+    "closeCash": "Close Cash",
+    "openCash": "Open Cash",
+    "openCashPrompt": "To start sales, you need to open the cash register.",
+    "invalidOpeningBalance": "Please enter a valid opening balance.",
+    "cashOpened": "Cash opened",
+    "cashOpenedSuccess": "Cash register opened successfully!",
+    "supply": "Supply",
+    "withdrawal": "Withdrawal",
+    "amount": "Amount",
+    "description": "Description",
+    "invalidAmount": "Please enter a valid amount.",
+    "movementSuccess": "Movement registered successfully!",
+    "closeCashSummary": "Cash Closing Summary",
+    "salesInCash": "Sales (Cash)",
+    "supplies": "Supplies",
+    "withdrawals": "Withdrawals",
+    "expectedBalance": "Expected Balance",
+    "countedBalance": "Counted Balance",
+    "invalidCountedBalance": "Please enter the amount counted in the cash register.",
+    "difference": "Difference",
+    "surplus": "Surplus",
+    "shortage": "Shortage",
+    "confirmCloseCash": "Confirm Closing",
+    "cashClosedSuccess": "Cash register closed successfully!"
   }
 }
