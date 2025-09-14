@@ -61,7 +61,11 @@
     "mostActiveClients": "Most Active Clients (Month)",
     "vsLastMonth": "vs last month",
     "noSalesLastMonth": "no data from last month",
-    "noData": "No data to display"
+    "noData": "No data to display",
+    "cashRegisterOpen": "Cash Register Open",
+    "cashRegisterClosed": "Cash Register Closed",
+    "cashRegisterOpenMessage": "The POS is ready to record sales.",
+    "cashRegisterClosedMessage": "Navigate to the POS to open the cash register."
   },
   "employee": {
     "description": "The MEI can have a maximum of one employee. Manage the data here.",
@@ -387,7 +391,8 @@
     "shortage": "Shortage",
     "confirmCloseCash": "Confirm Closing",
     "cashClosedSuccess": "Cash register closed successfully!",
-    "operationCanceled": "Operation canceled. Returning to dashboard."
+    "operationCanceled": "Operation canceled. Returning to dashboard.",
+    "closingSummaryToast": "Cash closed! Expected: R$ {{expected}}, Counted: R$ {{counted}}, Difference: R$ {{difference}}"
   },
   "financial": {
     "title": "Financial Management",

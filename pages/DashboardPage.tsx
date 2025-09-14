@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
-import { AccountPayable, AccountReceivable, Sale, Product, Client } from '../types';
+import { AccountPayable, AccountReceivable, Sale, Product, Client, CashSession } from '../types';
 
 const faturamentoData = [
     { name: 'Jan', Faturamento: 4000 },
@@ -20,6 +20,7 @@ interface DashboardPageProps {
   sales: Sale[];
   accountsPayable: AccountPayable[];
   accountsReceivable: AccountReceivable[];
+  cashSessions: CashSession[];
 }
 
 const ComparisonBadge: React.FC<{ percentage: number | null }> = ({ percentage }) => {
@@ -39,11 +40,15 @@ const ComparisonBadge: React.FC<{ percentage: number | null }> = ({ percentage }
 };
 
 
-const DashboardPage: React.FC<DashboardPageProps> = ({ sales, accountsPayable, accountsReceivable }) => {
+const DashboardPage: React.FC<DashboardPageProps> = ({ sales, accountsPayable, accountsReceivable, cashSessions }) => {
   type Period = 'daily' | 'monthly' | 'yearly';
   const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('daily');
   
+  const isCashRegisterOpen = useMemo(() => {
+      return cashSessions.some(session => session.status === 'Open');
+  }, [cashSessions]);
+
   const dashboardMetrics = useMemo(() => {
     const today = new Date();
     const currentMonth = today.getMonth();
@@ -180,6 +185,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ sales, accountsPayable, a
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{t('sidebar.dashboard')}</h1>
       
+      <Card title={t('cashControl.title')}>
+          <div className="flex items-center space-x-4">
+              <div className={`w-4 h-4 rounded-full animate-pulse ${isCashRegisterOpen ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <div>
+                  <p className="font-semibold">{isCashRegisterOpen ? t('dashboard.cashRegisterOpen') : t('dashboard.cashRegisterClosed')}</p>
+                  <p className="text-sm text-gray-500">{isCashRegisterOpen ? t('dashboard.cashRegisterOpenMessage') : t('dashboard.cashRegisterClosedMessage')}</p>
+              </div>
+          </div>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card title={t('dashboard.pendingPayable')}>
               <p className="text-2xl font-bold text-red-500">R$ {dashboardMetrics.pendingPayable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Page, Product, Sale, AccountPayable, AccountReceivable, StockMovement } from './types';
+import { Page, Product, Sale, AccountPayable, AccountReceivable, StockMovement, CashSession } from './types';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -16,7 +16,7 @@ import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
-import { MOCK_PRODUCTS, MOCK_SALES, MOCK_ACCOUNTS_PAYABLE, MOCK_ACCOUNTS_RECEIVABLE, MOCK_STOCK_MOVEMENTS } from './constants';
+import { MOCK_PRODUCTS, MOCK_SALES, MOCK_ACCOUNTS_PAYABLE, MOCK_ACCOUNTS_RECEIVABLE, MOCK_STOCK_MOVEMENTS, MOCK_CASH_SESSIONS } from './constants';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -29,18 +29,19 @@ const App: React.FC = () => {
   const [accountsPayable, setAccountsPayable] = useState<AccountPayable[]>(MOCK_ACCOUNTS_PAYABLE);
   const [accountsReceivable, setAccountsReceivable] = useState<AccountReceivable[]>(MOCK_ACCOUNTS_RECEIVABLE);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>(MOCK_STOCK_MOVEMENTS);
+  const [cashSessions, setCashSessions] = useState<CashSession[]>(MOCK_CASH_SESSIONS);
 
 
   const renderPage = () => {
     switch (currentPage) {
       case Page.Dashboard:
-        return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} />;
+        return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} cashSessions={cashSessions} />;
       case Page.Employee:
         return <EmployeePage />;
       case Page.Client:
         return <ClientPage />;
       case Page.Sales:
-        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} setCurrentPage={setCurrentPage} />;
+        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} setCurrentPage={setCurrentPage} cashSessions={cashSessions} setCashSessions={setCashSessions} />;
       case Page.Products:
         return <ProductsPage 
                   products={products} 
@@ -65,7 +66,7 @@ const App: React.FC = () => {
       case Page.Settings:
         return <SettingsPage handleLogout={handleLogout} />;
       default:
-        return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} />;
+        return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} cashSessions={cashSessions} />;
     }
   };
   

@@ -61,7 +61,11 @@
     "mostActiveClients": "Clientes Mais Ativos (Mês)",
     "vsLastMonth": "vs mês anterior",
     "noSalesLastMonth": "sem dados do mês anterior",
-    "noData": "Sem dados para exibir"
+    "noData": "Sem dados para exibir",
+    "cashRegisterOpen": "Caixa Aberto",
+    "cashRegisterClosed": "Caixa Fechado",
+    "cashRegisterOpenMessage": "O PDV está pronto para registrar vendas.",
+    "cashRegisterClosedMessage": "Navegue até o PDV para abrir o caixa."
   },
   "employee": {
     "description": "O MEI pode ter no máximo um funcionário. Gerencie os dados aqui.",
@@ -387,7 +391,8 @@
     "shortage": "Falta",
     "confirmCloseCash": "Confirmar Fechamento",
     "cashClosedSuccess": "Caixa fechado com sucesso!",
-    "operationCanceled": "Operação cancelada. Retornando ao dashboard."
+    "operationCanceled": "Operação cancelada. Retornando ao dashboard.",
+    "closingSummaryToast": "Caixa fechado! Esperado: R$ {{expected}}, Contado: R$ {{counted}}, Diferença: R$ {{difference}}"
   },
   "financial": {
     "title": "Gestão Financeira",

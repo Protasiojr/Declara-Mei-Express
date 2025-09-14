@@ -3,7 +3,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Page, Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User, AccountReceivable } from '../types';
-import { MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER, MOCK_CASH_SESSIONS } from '../constants';
+import { MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
@@ -16,9 +16,11 @@ interface SalesPageProps {
     setSales: React.Dispatch<React.SetStateAction<Sale[]>>;
     setAccountsReceivable: React.Dispatch<React.SetStateAction<AccountReceivable[]>>;
     setCurrentPage: (page: Page) => void;
+    cashSessions: CashSession[];
+    setCashSessions: React.Dispatch<React.SetStateAction<CashSession[]>>;
 }
 
-const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales, setAccountsReceivable, setCurrentPage }) => {
+const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales, setAccountsReceivable, setCurrentPage, cashSessions, setCashSessions }) => {
     const { t } = useTranslation();
     const toast = useToast();
     
@@ -32,7 +34,6 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
     // Cash Control State
-    const [cashSessions, setCashSessions] = useState<CashSession[]>(MOCK_CASH_SESSIONS);
     const [currentCashSession, setCurrentCashSession] = useState<CashSession | null>(null);
 
     // Modal states
@@ -68,7 +69,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
         } else {
             setIsOpeningModalOpen(true);
         }
-    }, []);
+    }, [cashSessions]);
 
 
     const availableItems: (Product | Service)[] = useMemo(() => [...products, ...services], [products, services]);
@@ -315,6 +316,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             status: 'Open',
             transactions: [openingTransaction]
         };
+        setCashSessions(prev => [...prev, newSession]);
         setCurrentCashSession(newSession);
         setIsOpeningModalOpen(false);
         setOpeningBalance('');
@@ -369,7 +371,12 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             setCurrentCashSession(null);
             setIsClosingModalOpen(false);
             setCountedBalance('');
-            toast.success(t('cashControl.cashClosedSuccess'));
+            toast.info(t('cashControl.closingSummaryToast', {
+                expected: closedSession.expectedBalance?.toFixed(2) || '0.00',
+                counted: closedSession.closingBalance?.toFixed(2) || '0.00',
+                difference: closedSession.difference?.toFixed(2) || '0.00'
+            }));
+            setCurrentPage(Page.Dashboard);
         }
     }
     
