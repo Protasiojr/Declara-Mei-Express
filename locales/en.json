@@ -56,7 +56,13 @@
     "pendingPayable": "Accounts Payable (Pending)",
     "pendingReceivable": "Accounts Receivable (Pending)",
     "monthlyExpenses": "Expenses (Month)",
-    "monthlyProfit": "Profit (Month)"
+    "monthlyProfit": "Profit (Month)",
+    "averageTicket": "Average Ticket (Month)",
+    "bestSellingProducts": "Best-Selling Products (Month)",
+    "mostActiveClients": "Most Active Clients (Month)",
+    "vsLastMonth": "vs last month",
+    "noSalesLastMonth": "no data from last month",
+    "noData": "No data to display"
   },
   "employee": {
     "description": "The MEI can have a maximum of one employee. Manage the data here.",
@@ -316,7 +322,12 @@
     "grossProfit": "Gross Profit",
     "operatingExpenses": "Operating Expenses",
     "netProfit": "Net Profit",
-    "filterByDate": "Filter by Period"
+    "filterByDate": "Filter by Period",
+    "activeClientsReport": "Active Clients Report",
+    "activeClientsReportDescription": "Export a list of clients ranked by purchase value in a period.",
+    "totalPurchases": "Total Purchased",
+    "purchaseCount": "No. of Purchases",
+    "clientRank": "Rank"
   },
   "settings": {
     "general": "General Settings",

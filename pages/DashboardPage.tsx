@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
-import { AccountPayable, AccountReceivable, Sale } from '../types';
+import { AccountPayable, AccountReceivable, Sale, Product, Client } from '../types';
 
 const faturamentoData = [
     { name: 'Jan', Faturamento: 4000 },
@@ -22,45 +22,127 @@ interface DashboardPageProps {
   accountsReceivable: AccountReceivable[];
 }
 
+const ComparisonBadge: React.FC<{ percentage: number | null }> = ({ percentage }) => {
+    const { t } = useTranslation();
+    if (percentage === null) {
+        return <span className="text-xs font-normal text-gray-500 ml-2">{t('dashboard.noSalesLastMonth')}</span>;
+    }
+    const isPositive = percentage >= 0;
+    const color = isPositive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400';
+    const arrow = isPositive ? '↑' : '↓';
+
+    return (
+        <span className={`text-sm font-semibold ml-2 ${color}`}>
+            {arrow} {Math.abs(percentage).toFixed(1)}%
+        </span>
+    );
+};
+
 
 const DashboardPage: React.FC<DashboardPageProps> = ({ sales, accountsPayable, accountsReceivable }) => {
   type Period = 'daily' | 'monthly' | 'yearly';
   const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('daily');
   
-  const { monthlyExpenses, monthlyProfit, pendingPayable, pendingReceivable } = useMemo(() => {
+  const dashboardMetrics = useMemo(() => {
     const today = new Date();
     const currentMonth = today.getMonth();
     const currentYear = today.getFullYear();
-
-    const currentMonthPayables = accountsPayable.filter(p => {
-        const paymentDate = p.paymentDate ? new Date(p.paymentDate + 'T00:00:00') : null;
-        return paymentDate && paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
-    });
-    const monthlyExpenses = currentMonthPayables.reduce((sum, p) => sum + p.amount, 0);
-
-    const currentMonthSales = sales.filter(s => {
-        const saleDate = new Date(s.date + 'T00:00:00');
-        return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
-    });
     
-    const monthlyRevenue = currentMonthSales.reduce((sum, s) => sum + s.total, 0);
-    const monthlyCogs = currentMonthSales.reduce((sum, sale) => {
-        return sum + sale.items.reduce((itemSum, saleItem) => {
-            if ('costPrice' in saleItem.item) {
-                return itemSum + (saleItem.item.costPrice * saleItem.quantity);
-            }
-            return itemSum;
+    const prevMonthDate = new Date(today);
+    prevMonthDate.setMonth(currentMonth - 1);
+    const previousMonth = prevMonthDate.getMonth();
+    const previousMonthYear = prevMonthDate.getFullYear();
+
+    // Helper to calculate profit for a given period
+    const calculatePeriodMetrics = (month: number, year: number) => {
+        const periodSales = sales.filter(s => {
+            const saleDate = new Date(s.date + 'T00:00:00');
+            return saleDate.getMonth() === month && saleDate.getFullYear() === year;
+        });
+        const periodPayables = accountsPayable.filter(p => {
+            const paymentDate = p.paymentDate ? new Date(p.paymentDate + 'T00:00:00') : null;
+            return paymentDate && paymentDate.getMonth() === month && paymentDate.getFullYear() === year;
+        });
+
+        const revenue = periodSales.reduce((sum, s) => sum + s.total, 0);
+        const expenses = periodPayables.reduce((sum, p) => sum + p.amount, 0);
+        const cogs = periodSales.reduce((sum, sale) => {
+            return sum + sale.items.reduce((itemSum, saleItem) => {
+                if ('costPrice' in saleItem.item) {
+                    return itemSum + (saleItem.item.costPrice * saleItem.quantity);
+                }
+                return itemSum;
+            }, 0);
         }, 0);
-    }, 0);
-    
-    const monthlyGrossProfit = monthlyRevenue - monthlyCogs;
-    const monthlyProfit = monthlyGrossProfit - monthlyExpenses;
+        
+        const grossProfit = revenue - cogs;
+        const netProfit = grossProfit - expenses;
 
+        return { revenue, expenses, netProfit, salesCount: periodSales.length };
+    };
+
+    // Current and Previous month metrics
+    const currentMetrics = calculatePeriodMetrics(currentMonth, currentYear);
+    const previousMetrics = calculatePeriodMetrics(previousMonth, previousMonthYear);
+    
+    // Comparisons
+    const calculateComparison = (current: number, previous: number) => {
+        if (previous === 0) return current > 0 ? Infinity : 0;
+        return ((current - previous) / previous) * 100;
+    };
+    
+    const profitComparison = calculateComparison(currentMetrics.netProfit, previousMetrics.netProfit);
+    const expensesComparison = calculateComparison(currentMetrics.expenses, previousMetrics.expenses);
+
+    // Other Dashboard Metrics for current month
     const pendingPayable = accountsPayable.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
     const pendingReceivable = accountsReceivable.filter(r => r.status === 'Pending').reduce((sum, r) => sum + r.amount, 0);
+    const averageTicket = currentMetrics.salesCount > 0 ? currentMetrics.revenue / currentMetrics.salesCount : 0;
 
-    return { monthlyExpenses, monthlyProfit, pendingPayable, pendingReceivable };
+    // Best Selling Products
+    const productSales: { [key: string]: { name: string, quantity: number } } = {};
+    sales.filter(s => {
+        const saleDate = new Date(s.date + 'T00:00:00');
+        return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    }).forEach(sale => {
+        sale.items.forEach(item => {
+            if ('sku' in item.item) { // is a product
+                if (!productSales[item.item.id]) {
+                    productSales[item.item.id] = { name: item.item.name, quantity: 0 };
+                }
+                productSales[item.item.id].quantity += item.quantity;
+            }
+        });
+    });
+    const bestSellingProducts = Object.values(productSales).sort((a, b) => b.quantity - a.quantity).slice(0, 3);
+    
+    // Most Active Clients
+    const clientSales: { [key: string]: { name: string, totalSpent: number } } = {};
+    sales.filter(s => {
+        const saleDate = new Date(s.date + 'T00:00:00');
+        return s.client && saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    }).forEach(sale => {
+        if (sale.client) {
+            if (!clientSales[sale.client.id]) {
+                clientSales[sale.client.id] = { name: sale.client.fullName, totalSpent: 0 };
+            }
+            clientSales[sale.client.id].totalSpent += sale.total;
+        }
+    });
+    const mostActiveClients = Object.values(clientSales).sort((a, b) => b.totalSpent - a.totalSpent).slice(0, 3);
+
+    return { 
+        monthlyExpenses: currentMetrics.expenses, 
+        monthlyProfit: currentMetrics.netProfit,
+        profitComparison: isFinite(profitComparison) ? profitComparison : null,
+        expensesComparison: isFinite(expensesComparison) ? expensesComparison : null,
+        pendingPayable, 
+        pendingReceivable,
+        averageTicket,
+        bestSellingProducts,
+        mostActiveClients
+    };
   }, [sales, accountsPayable, accountsReceivable]);
 
 
@@ -100,18 +182,53 @@ const DashboardPage: React.FC<DashboardPageProps> = ({ sales, accountsPayable, a
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card title={t('dashboard.pendingPayable')}>
-              <p className="text-2xl font-bold text-red-500">R$ {pendingPayable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-2xl font-bold text-red-500">R$ {dashboardMetrics.pendingPayable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
           </Card>
           <Card title={t('dashboard.pendingReceivable')}>
-              <p className="text-2xl font-bold text-green-500">R$ {pendingReceivable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <p className="text-2xl font-bold text-green-500">R$ {dashboardMetrics.pendingReceivable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
           </Card>
           <Card title={t('dashboard.monthlyExpenses')}>
-              <p className="text-2xl font-bold">R$ {monthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <div className="flex items-baseline">
+                <p className="text-2xl font-bold">R$ {dashboardMetrics.monthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <ComparisonBadge percentage={dashboardMetrics.expensesComparison} />
+              </div>
           </Card>
           <Card title={t('dashboard.monthlyProfit')}>
-              <p className={`text-2xl font-bold ${monthlyProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`}>R$ {monthlyProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+              <div className="flex items-baseline">
+                <p className={`text-2xl font-bold ${dashboardMetrics.monthlyProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`}>R$ {dashboardMetrics.monthlyProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                <ComparisonBadge percentage={dashboardMetrics.profitComparison} />
+              </div>
           </Card>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card title={t('dashboard.averageTicket')}>
+            <p className="text-3xl font-bold">R$ {dashboardMetrics.averageTicket.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+        </Card>
+        <Card title={t('dashboard.bestSellingProducts')}>
+            {dashboardMetrics.bestSellingProducts.length > 0 ? (
+                <ol className="list-decimal list-inside space-y-1">
+                    {dashboardMetrics.bestSellingProducts.map((p, i) => (
+                        <li key={i} className="truncate">
+                            <span className="font-semibold">{p.name}</span> ({p.quantity} {t('sales.quantity').toLowerCase()})
+                        </li>
+                    ))}
+                </ol>
+            ) : <p className="text-gray-500">{t('dashboard.noData')}</p>}
+        </Card>
+        <Card title={t('dashboard.mostActiveClients')}>
+            {dashboardMetrics.mostActiveClients.length > 0 ? (
+                <ol className="list-decimal list-inside space-y-1">
+                    {dashboardMetrics.mostActiveClients.map((c, i) => (
+                        <li key={i} className="truncate">
+                            <span className="font-semibold">{c.name}</span> (R$ {c.totalSpent.toFixed(2)})
+                        </li>
+                    ))}
+                </ol>
+            ) : <p className="text-gray-500">{t('dashboard.noData')}</p>}
+        </Card>
+      </div>
+
 
       <Card title={t('dashboard.annualBillingSummary')}>
         <div className="space-y-2">

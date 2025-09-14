@@ -28,6 +28,9 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
     const [salesEndDate, setSalesEndDate] = useState('');
     const [financialStartDate, setFinancialStartDate] = useState('');
     const [financialEndDate, setFinancialEndDate] = useState('');
+    const [activeClientsStartDate, setActiveClientsStartDate] = useState('');
+    const [activeClientsEndDate, setActiveClientsEndDate] = useState('');
+
 
     const handleExportSalesPDF = () => {
         const filteredSales = sales.filter(sale => {
@@ -500,6 +503,55 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
         doc.save('demonstrativo_lucro.pdf');
     }
 
+    const handleGenerateActiveClientsPDF = () => {
+        const doc = new jsPDF();
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+
+        doc.setFontSize(18);
+        doc.text(t('reports.activeClientsReport'), 14, 22);
+        doc.setFontSize(10);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+
+        const filteredSales = sales.filter(sale => {
+            if (!sale.client) return false;
+            if (activeClientsStartDate && sale.date < activeClientsStartDate) return false;
+            if (activeClientsEndDate && sale.date > activeClientsEndDate) return false;
+            return true;
+        });
+
+        const clientData: { [id: number]: { name: string, total: number, count: number } } = {};
+
+        filteredSales.forEach(sale => {
+            if (sale.client) {
+                if (!clientData[sale.client.id]) {
+                    clientData[sale.client.id] = { name: sale.client.fullName, total: 0, count: 0 };
+                }
+                clientData[sale.client.id].total += sale.total;
+                clientData[sale.client.id].count += 1;
+            }
+        });
+
+        const rankedClients = Object.values(clientData).sort((a, b) => b.total - a.total);
+
+        const head = [[t('reports.clientRank'), t('clients.fullName'), t('reports.purchaseCount'), t('reports.totalPurchases')]];
+        const body = rankedClients.map((client, index) => [
+            index + 1,
+            client.name,
+            client.count,
+            `R$ ${client.total.toFixed(2)}`,
+        ]);
+
+        autoTable(doc, {
+            startY: 35,
+            head: head,
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [29, 78, 216] },
+        });
+
+        doc.save('relatorio_clientes_ativos.pdf');
+    };
+
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{t('sidebar.reports')}</h1>
@@ -523,6 +575,25 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
                     </div>
                     
                     <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
+                    <div>
+                        <h4 className="font-semibold text-lg">{t('reports.activeClientsReport')}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.activeClientsReportDescription')}</p>
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                            <div>
+                                <label htmlFor="activeClientsStartDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterStartDate')}</label>
+                                <input type="date" name="activeClientsStartDate" value={activeClientsStartDate} onChange={(e) => setActiveClientsStartDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
+                            </div>
+                            <div>
+                                <label htmlFor="activeClientsEndDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterEndDate')}</label>
+                                <input type="date" name="activeClientsEndDate" value={activeClientsEndDate} onChange={(e) => setActiveClientsEndDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
+                            </div>
+                            <Button onClick={handleGenerateActiveClientsPDF}>{t('reports.exportPdf')}</Button>
+                        </div>
+                    </div>
+
+                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
+
                     <div>
                         <h4 className="font-semibold text-lg">{t('reports.inventoryReports')}</h4>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.inventoryReportsDescription')}</p>

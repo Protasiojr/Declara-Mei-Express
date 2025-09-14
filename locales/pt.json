@@ -56,7 +56,13 @@
     "pendingPayable": "Contas a Pagar (Pendente)",
     "pendingReceivable": "Contas a Receber (Pendente)",
     "monthlyExpenses": "Despesas do Mês",
-    "monthlyProfit": "Lucro do Mês"
+    "monthlyProfit": "Lucro do Mês",
+    "averageTicket": "Ticket Médio (Mês)",
+    "bestSellingProducts": "Produtos Mais Vendidos (Mês)",
+    "mostActiveClients": "Clientes Mais Ativos (Mês)",
+    "vsLastMonth": "vs mês anterior",
+    "noSalesLastMonth": "sem dados do mês anterior",
+    "noData": "Sem dados para exibir"
   },
   "employee": {
     "description": "O MEI pode ter no máximo um funcionário. Gerencie os dados aqui.",
@@ -316,7 +322,12 @@
     "grossProfit": "Lucro Bruto",
     "operatingExpenses": "Despesas Operacionais",
     "netProfit": "Lucro Líquido",
-    "filterByDate": "Filtrar por Período"
+    "filterByDate": "Filtrar por Período",
+    "activeClientsReport": "Relatório de Clientes Ativos",
+    "activeClientsReportDescription": "Exporte uma lista de clientes classificados por valor de compra em um período.",
+    "totalPurchases": "Total Comprado",
+    "purchaseCount": "Nº de Compras",
+    "clientRank": "Rank"
   },
   "settings": {
     "general": "Configurações Gerais",
