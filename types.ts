@@ -66,7 +66,13 @@ export interface Product {
   id: number;
   sku: string;
   name: string;
-  price: number;
+  category: string;
+  description: string;
+  unitOfMeasure: string;
+  costPrice: number;
+  price: number; // Sale Price
+  minStock: number;
+  currentStock: number;
   type: 'Regular' | 'Industrializado';
 }
 

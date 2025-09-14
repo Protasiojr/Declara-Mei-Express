@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -70,9 +71,9 @@ const SalesPage: React.FC = () => {
     // New Item Modal State
     const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
     const [newItemType, setNewItemType] = useState<'product' | 'service'>('product');
-    // FIX: Add sku to form data and errors to handle product creation correctly.
-    const [newItemFormData, setNewItemFormData] = useState({ name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado', sku: '' });
-    const [newItemErrors, setNewItemErrors] = useState({ name: '', price: '', sku: '' });
+    const initialNewItemForm = { name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado', sku: '', category: '', description: '', unitOfMeasure: 'un', costPrice: '', minStock: '', currentStock: '' };
+    const [newItemFormData, setNewItemFormData] = useState(initialNewItemForm);
+    const [newItemErrors, setNewItemErrors] = useState({ name: '', price: '', sku: '', category: '', costPrice: '', minStock: '', currentStock: '' });
 
     const findItemByValue = (value: string): Product | Service | undefined => {
         const [type, idStr] = value.split('-');
@@ -184,6 +185,11 @@ const SalesPage: React.FC = () => {
         } else {
             const item = findItemByValue(formData.itemId);
             if (!item) return;
+
+            if ('sku' in item) {
+                setProducts(prev => prev.map(p => p.id === item.id ? { ...p, currentStock: p.currentStock - Number(formData.quantity) } : p));
+            }
+
             const newSale: Sale = {
                 id: Date.now(),
                 item,
@@ -206,14 +212,44 @@ const SalesPage: React.FC = () => {
         }
 
         if(currentSale) {
-            const item = findItemByValue(formData.itemId);
-            if (!item) return;
+            const newItem = findItemByValue(formData.itemId);
+            if (!newItem) return;
+
+            // FIX: Define newQuantity from form data before it is used. This resolves errors on lines that use newQuantity.
+            const newQuantity = Number(formData.quantity);
+
+            // Stock adjustment logic
+            const originalSale = sales.find(s => s.id === currentSale.id);
+            if(originalSale) {
+                const isOriginalItemProduct = 'sku' in originalSale.item;
+                const isNewItemProduct = 'sku' in newItem;
+                
+                setProducts(prevProducts => {
+                    let tempProducts = [...prevProducts];
+                    // Case 1: Item is the same product, quantity might have changed
+                    if (isOriginalItemProduct && isNewItemProduct && originalSale.item.id === newItem.id) {
+                        const quantityDiff = newQuantity - originalSale.quantity;
+                        tempProducts = tempProducts.map(p => p.id === newItem.id ? { ...p, currentStock: p.currentStock - quantityDiff } : p);
+                    } else {
+                    // Case 2: Item changed
+                        // Restore stock for the original item if it was a product
+                        if (isOriginalItemProduct) {
+                             tempProducts = tempProducts.map(p => p.id === (originalSale.item as Product).id ? { ...p, currentStock: p.currentStock + originalSale.quantity } : p);
+                        }
+                        // Decrement stock for the new item if it is a product
+                        if (isNewItemProduct) {
+                            tempProducts = tempProducts.map(p => p.id === newItem.id ? { ...p, currentStock: p.currentStock - newQuantity } : p);
+                        }
+                    }
+                    return tempProducts;
+                });
+            }
 
             const updatedSale: Sale = {
                 id: currentSale.id,
-                item,
-                quantity: Number(formData.quantity),
-                total: item.price * Number(formData.quantity),
+                item: newItem,
+                quantity: newQuantity,
+                total: newItem.price * newQuantity,
                 date: formData.date,
                 withInvoice: formData.withInvoice,
                 client: formData.client
@@ -228,6 +264,10 @@ const SalesPage: React.FC = () => {
 
     const handleDelete = (saleId: number) => {
         toast.confirm(t('sales.deleteConfirm'), () => {
+            const saleToDelete = sales.find(s => s.id === saleId);
+            if (saleToDelete && 'sku' in saleToDelete.item) {
+                setProducts(prev => prev.map(p => p.id === saleToDelete.item.id ? { ...p, currentStock: p.currentStock + saleToDelete.quantity } : p));
+            }
             setSales(sales.filter(s => s.id !== saleId));
             toast.success(t('sales.deleteSuccess'));
         });
@@ -335,33 +375,49 @@ const SalesPage: React.FC = () => {
     
     const handleOpenNewItemModal = (type: 'product' | 'service') => {
         setNewItemType(type);
-        setNewItemFormData({ name: '', price: '', type: 'Regular', sku: '' });
-        setNewItemErrors({ name: '', price: '', sku: '' });
+        setNewItemFormData(initialNewItemForm);
+        setNewItemErrors({ name: '', price: '', sku: '', category: '', costPrice: '', minStock: '', currentStock: '' });
         setIsNewItemModalOpen(true);
     };
     
     const handleSaveNewItem = () => {
-        const { name, price, sku } = newItemFormData;
+        const { name, price, sku, category, costPrice, minStock, currentStock } = newItemFormData;
         const priceNum = Number(price);
-        const newErrors = { name: '', price: '', sku: '' };
+        const costPriceNum = Number(costPrice);
+        const minStockNum = Number(minStock);
+        const currentStockNum = Number(currentStock);
+
+        const newErrors = { name: '', price: '', sku: '', category: '', costPrice: '', minStock: '', currentStock: '' };
         let isValid = true;
-        if (!name.trim()) {
-            newErrors.name = t('validation.required');
-            isValid = false;
+
+        if (!name.trim()) { newErrors.name = t('validation.required'); isValid = false; }
+        if (!price || isNaN(priceNum) || priceNum <= 0) { newErrors.price = t('validation.invalidPrice'); isValid = false; }
+        
+        if (newItemType === 'product') {
+            if (!sku.trim()) { newErrors.sku = t('validation.required'); isValid = false; }
+            if (!category.trim()) { newErrors.category = t('validation.required'); isValid = false; }
+            if (!costPrice || isNaN(costPriceNum) || costPriceNum <= 0) { newErrors.costPrice = t('validation.invalidPrice'); isValid = false; }
+            if (!minStock || isNaN(minStockNum) || minStockNum < 0) { newErrors.minStock = t('validation.invalidStock'); isValid = false; }
+            if (!currentStock || isNaN(currentStockNum) || currentStockNum < 0) { newErrors.currentStock = t('validation.invalidStock'); isValid = false; }
         }
-        if (!price || isNaN(priceNum) || priceNum <= 0) {
-            newErrors.price = t('validation.invalidPrice');
-            isValid = false;
-        }
-        if (newItemType === 'product' && !sku.trim()) {
-            newErrors.sku = t('validation.required');
-            isValid = false;
-        }
+
         setNewItemErrors(newErrors);
         if (!isValid) return;
 
         if (newItemType === 'product') {
-            const newProduct: Product = { id: Date.now(), sku, name, price: priceNum, type: newItemFormData.type };
+            const newProduct: Product = { 
+                id: Date.now(), 
+                sku, 
+                name, 
+                price: priceNum, 
+                type: newItemFormData.type,
+                category,
+                description: newItemFormData.description,
+                unitOfMeasure: newItemFormData.unitOfMeasure,
+                costPrice: costPriceNum,
+                minStock: minStockNum,
+                currentStock: currentStockNum
+            };
             setProducts(prev => [newProduct, ...prev]);
             handleSelectItem({ value: `product-${newProduct.id}`, label: newProduct.name });
         } else {
@@ -607,34 +663,71 @@ const SalesPage: React.FC = () => {
             </Modal>
             
             {/* New Item Modal */}
-             <Modal isOpen={isNewItemModalOpen} onClose={() => setIsNewItemModalOpen(false)} title={t('sales.addNewItem')}>
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium">{t('sales.itemName')}</label>
-                        <input type="text" value={newItemFormData.name} onChange={(e) => setNewItemFormData(p => ({...p, name: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
-                        {newItemErrors.name && <p className="text-sm text-red-500 mt-1">{newItemErrors.name}</p>}
-                    </div>
-                    {newItemType === 'product' && (
-                        <div>
-                            <label className="block text-sm font-medium">{t('products.sku')}</label>
-                            <input type="text" value={newItemFormData.sku} onChange={(e) => setNewItemFormData(p => ({...p, sku: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.sku ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
-                            {newItemErrors.sku && <p className="text-sm text-red-500 mt-1">{newItemErrors.sku}</p>}
+            <Modal isOpen={isNewItemModalOpen} onClose={() => setIsNewItemModalOpen(false)} title={t('sales.addNewItem')}>
+                <div className="space-y-4 max-h-[70vh] overflow-y-auto p-1">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2">
+                            <label className="block text-sm font-medium">{t('products.productName')}</label>
+                            <input type="text" value={newItemFormData.name} onChange={(e) => setNewItemFormData(p => ({...p, name: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                            {newItemErrors.name && <p className="text-sm text-red-500 mt-1">{newItemErrors.name}</p>}
                         </div>
-                    )}
-                     <div>
-                        <label className="block text-sm font-medium">{t('sales.itemPrice')}</label>
-                        <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
-                        {newItemErrors.price && <p className="text-sm text-red-500 mt-1">{newItemErrors.price}</p>}
+                         {newItemType === 'product' && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium">{t('products.sku')}</label>
+                                    <input type="text" value={newItemFormData.sku} onChange={(e) => setNewItemFormData(p => ({...p, sku: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.sku ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                    {newItemErrors.sku && <p className="text-sm text-red-500 mt-1">{newItemErrors.sku}</p>}
+                                </div>
+                                 <div>
+                                    <label className="block text-sm font-medium">{t('products.category')}</label>
+                                    <input type="text" value={newItemFormData.category} onChange={(e) => setNewItemFormData(p => ({...p, category: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.category ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                    {newItemErrors.category && <p className="text-sm text-red-500 mt-1">{newItemErrors.category}</p>}
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium">{t('products.description')}</label>
+                                    <textarea value={newItemFormData.description} onChange={(e) => setNewItemFormData(p => ({...p, description: e.target.value}))} rows={3} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"/>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium">{t('products.costPrice')}</label>
+                                    <input type="number" value={newItemFormData.costPrice} onChange={(e) => setNewItemFormData(p => ({...p, costPrice: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.costPrice ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                    {newItemErrors.costPrice && <p className="text-sm text-red-500 mt-1">{newItemErrors.costPrice}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium">{t('products.price')}</label>
+                                    <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                    {newItemErrors.price && <p className="text-sm text-red-500 mt-1">{newItemErrors.price}</p>}
+                                </div>
+                                 <div>
+                                    <label className="block text-sm font-medium">{t('products.currentStock')}</label>
+                                    <input type="number" value={newItemFormData.currentStock} onChange={(e) => setNewItemFormData(p => ({...p, currentStock: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.currentStock ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                    {newItemErrors.currentStock && <p className="text-sm text-red-500 mt-1">{newItemErrors.currentStock}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium">{t('products.minStock')}</label>
+                                    <input type="number" value={newItemFormData.minStock} onChange={(e) => setNewItemFormData(p => ({...p, minStock: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.minStock ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                    {newItemErrors.minStock && <p className="text-sm text-red-500 mt-1">{newItemErrors.minStock}</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium">{t('products.unitOfMeasure')}</label>
+                                    <input type="text" value={newItemFormData.unitOfMeasure} onChange={(e) => setNewItemFormData(p => ({...p, unitOfMeasure: e.target.value}))} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"/>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium">{t('products.type')}</label>
+                                    <select value={newItemFormData.type} onChange={(e) => setNewItemFormData(p => ({...p, type: e.target.value as 'Regular' | 'Industrializado'}))} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+                                        <option value="Regular">{t('products.typeRegular')}</option>
+                                        <option value="Industrializado">{t('products.typeIndustrialized')}</option>
+                                    </select>
+                                </div>
+                            </>
+                        )}
+                        {newItemType === 'service' && (
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-medium">{t('sales.itemPrice')}</label>
+                                <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                                {newItemErrors.price && <p className="text-sm text-red-500 mt-1">{newItemErrors.price}</p>}
+                            </div>
+                        )}
                     </div>
-                    {newItemType === 'product' && (
-                        <div>
-                             <label className="block text-sm font-medium">{t('sales.itemType')}</label>
-                             <select value={newItemFormData.type} onChange={(e) => setNewItemFormData(p => ({...p, type: e.target.value as 'Regular' | 'Industrializado'}))} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                <option value="Regular">{t('products.typeRegular')}</option>
-                                <option value="Industrializado">{t('products.typeIndustrialized')}</option>
-                            </select>
-                        </div>
-                    )}
                     <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="secondary" onClick={() => setIsNewItemModalOpen(false)}>{t('common.cancel')}</Button>
                         <Button onClick={handleSaveNewItem}>{t('common.save')}</Button>

@@ -165,7 +165,7 @@
   "products": {
     "sku": "SKU / Code",
     "productName": "Product Name",
-    "price": "Price",
+    "price": "Sale Price",
     "actions": "Actions",
     "addNew": "Add New Product",
     "resaleProducts": "Resale Products",
@@ -179,7 +179,13 @@
     "noProducts": "No products registered.",
     "addSuccess": "Product added successfully!",
     "updateSuccess": "Product updated successfully!",
-    "deleteSuccess": "Product deleted successfully!"
+    "deleteSuccess": "Product deleted successfully!",
+    "category": "Category",
+    "description": "Description",
+    "unitOfMeasure": "Unit of Measure",
+    "costPrice": "Cost Price",
+    "minStock": "Minimum Stock",
+    "currentStock": "Current Stock"
   },
   "services": {
     "serviceRegistry": "Service Registry",
@@ -272,6 +278,7 @@
     "invalidCnpj": "Please enter a valid CNPJ in the format XX.XXX.XXX/XXXX-XX.",
     "passwordMinLength": "Password must be at least 6 characters long.",
     "invalidPrice": "Please enter a valid price greater than zero.",
-    "endDateAfterStartDate": "The end date must be after the start date."
+    "endDateAfterStartDate": "The end date must be after the start date.",
+    "invalidStock": "Please enter a valid stock value (0 or greater)."
   }
 }

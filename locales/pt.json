@@ -165,7 +165,7 @@
   "products": {
     "sku": "SKU / Código",
     "productName": "Nome do Produto",
-    "price": "Preço",
+    "price": "Preço de Venda",
     "actions": "Ações",
     "addNew": "Adicionar Novo Produto",
     "resaleProducts": "Produtos de Revenda",
@@ -179,7 +179,13 @@
     "noProducts": "Nenhum produto cadastrado.",
     "addSuccess": "Produto adicionado com sucesso!",
     "updateSuccess": "Produto atualizado com sucesso!",
-    "deleteSuccess": "Produto excluído com sucesso!"
+    "deleteSuccess": "Produto excluído com sucesso!",
+    "category": "Categoria",
+    "description": "Descrição",
+    "unitOfMeasure": "Unidade de Medida",
+    "costPrice": "Preço de Custo",
+    "minStock": "Estoque Mínimo",
+    "currentStock": "Estoque Atual"
   },
   "services": {
     "serviceRegistry": "Cadastro de Serviços",
@@ -272,6 +278,7 @@
     "invalidCnpj": "Por favor, insira um CNPJ no formato XX.XXX.XXX/XXXX-XX.",
     "passwordMinLength": "A senha deve ter pelo menos 6 caracteres.",
     "invalidPrice": "Por favor, insira um preço válido maior que zero.",
-    "endDateAfterStartDate": "A data final deve ser posterior à data inicial."
+    "endDateAfterStartDate": "A data final deve ser posterior à data inicial.",
+    "invalidStock": "Por favor, insira um valor de estoque válido (0 ou maior)."
   }
 }
