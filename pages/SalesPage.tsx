@@ -1,23 +1,30 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User } from '../types';
-import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER, MOCK_CASH_SESSIONS } from '../constants';
+import { MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER, MOCK_CASH_SESSIONS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 
-const SalesPage: React.FC = () => {
+// FIX: Accept props for state management
+interface SalesPageProps {
+    products: Product[];
+    setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+    sales: Sale[];
+    setSales: React.Dispatch<React.SetStateAction<Sale[]>>;
+}
+
+const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales }) => {
     const { t } = useTranslation();
     const toast = useToast();
     
-    // Main data states
-    const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
-    const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
-    const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
+    // Main data states managed by App.tsx
+    // const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
+    // const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
+    const [services] = useState<Service[]>(MOCK_SERVICES);
     const [clients] = useState<Client[]>(MOCK_CLIENTS);
     const [user] = useState<User>(MOCK_USER);
 
@@ -150,6 +157,18 @@ const SalesPage: React.FC = () => {
             toast.error(t('sales.emptyCartError'));
             return;
         }
+
+        // FIX: Add stock validation before proceeding to payment.
+        for (const cartItem of cart) {
+            if ('sku' in cartItem.item) { // Check stock only for products
+                const productInStock = products.find(p => p.id === cartItem.item.id);
+                if (!productInStock || productInStock.currentStock < cartItem.quantity) {
+                    toast.error(t('sales.insufficientStockError', { productName: cartItem.item.name }));
+                    return;
+                }
+            }
+        }
+
         setIsPaymentModalOpen(true);
     }
     

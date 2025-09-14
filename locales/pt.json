@@ -1,5 +1,4 @@
 
-
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -160,7 +159,8 @@
     "receiptPrompt": "Deseja imprimir o recibo?",
     "printReceipt": "Imprimir Recibo",
     "nonFiscalDocument": "Documento não fiscal",
-    "paymentDetails": "Detalhes do Pagamento"
+    "paymentDetails": "Detalhes do Pagamento",
+    "insufficientStockError": "Estoque insuficiente para {productName}."
   },
   "products": {
     "title": "Produtos",
@@ -186,7 +186,19 @@
     "unitOfMeasure": "Unidade de Medida",
     "costPrice": "Preço de Custo",
     "minStock": "Estoque Mínimo",
-    "currentStock": "Estoque Atual"
+    "currentStock": "Estoque Atual",
+    "lowStockWarning": "Estoque baixo!",
+    "adjustStock": "Ajustar Estoque",
+    "stockAdjustmentFor": "Ajustar Estoque de",
+    "movementType": "Tipo de Movimentação",
+    "stockInPurchase": "Entrada (Compra)",
+    "inventoryAdjustment": "Ajuste de Inventário",
+    "lossDamage": "Perda/Dano",
+    "newQuantity": "Nova Quantidade",
+    "currentStockIs": "Estoque Atual",
+    "stockAfterIs": "Estoque Após Ajuste",
+    "adjustmentReason": "Justificativa da Movimentação",
+    "stockAdjustSuccess": "Estoque ajustado com sucesso!"
   },
   "services": {
     "serviceRegistry": "Serviços",
@@ -253,7 +265,21 @@
     "cashSessionsReportDescription": "Exporte um histórico de todas as sessões de caixa, incluindo aberturas, fechamentos e diferenças.",
     "cashSessionsReportTitle": "Relatório de Sessões de Caixa",
     "opened": "Abertura",
-    "closed": "Fechamento"
+    "closed": "Fechamento",
+    "inventoryReports": "Relatórios de Estoque",
+    "inventoryReportsDescription": "Analise o giro de produtos e os níveis de estoque.",
+    "generateTurnoverReport": "Giro de Produtos",
+    "turnoverReportDescription": "Exporte um relatório com os produtos mais e menos vendidos.",
+    "generateLowStockReport": "Estoque Baixo",
+    "lowStockReportDescription": "Exporte uma lista de produtos que atingiram o estoque mínimo.",
+    "productTurnoverReportTitle": "Relatório de Giro de Produtos",
+    "bestSellers": "Produtos Mais Vendidos",
+    "deadStock": "Produtos Encalhados (Sem Vendas)",
+    "quantitySold": "Quantidade Vendida",
+    "totalRevenue": "Receita Total",
+    "lowStockReportTitle": "Relatório de Estoque Baixo",
+    "currentStock": "Estoque Atual",
+    "minStock": "Estoque Mínimo"
   },
   "settings": {
     "general": "Configurações Gerais",
@@ -272,7 +298,7 @@
     "invalidPrice": "Por favor, insira um preço válido maior que zero.",
     "endDateAfterStartDate": "A data final deve ser posterior à data inicial.",
     "invalidStock": "Por favor, insira um valor de estoque válido (0 ou maior).",
-    "requiredDescription": "A descrição é obrigatória."
+    "requiredDescription": "A descrição/justificativa é obrigatória."
   },
   "cashControl": {
     "title": "Controle de Caixa",

@@ -1,5 +1,4 @@
 
-
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -160,7 +159,8 @@
     "receiptPrompt": "Do you want to print the receipt?",
     "printReceipt": "Print Receipt",
     "nonFiscalDocument": "Non-fiscal document",
-    "paymentDetails": "Payment Details"
+    "paymentDetails": "Payment Details",
+    "insufficientStockError": "Insufficient stock for {productName}."
   },
   "products": {
     "title": "Products",
@@ -186,7 +186,19 @@
     "unitOfMeasure": "Unit of Measure",
     "costPrice": "Cost Price",
     "minStock": "Minimum Stock",
-    "currentStock": "Current Stock"
+    "currentStock": "Current Stock",
+    "lowStockWarning": "Low stock!",
+    "adjustStock": "Adjust Stock",
+    "stockAdjustmentFor": "Adjust Stock for",
+    "movementType": "Movement Type",
+    "stockInPurchase": "Stock-in (Purchase)",
+    "inventoryAdjustment": "Inventory Adjustment",
+    "lossDamage": "Loss/Damage",
+    "newQuantity": "New Quantity",
+    "currentStockIs": "Current Stock",
+    "stockAfterIs": "Stock After Adjustment",
+    "adjustmentReason": "Reason for Movement",
+    "stockAdjustSuccess": "Stock adjusted successfully!"
   },
   "services": {
     "serviceRegistry": "Services",
@@ -253,7 +265,21 @@
     "cashSessionsReportDescription": "Export a history of all cash register sessions, including openings, closings, and differences.",
     "cashSessionsReportTitle": "Cash Sessions Report",
     "opened": "Opened",
-    "closed": "Closed"
+    "closed": "Closed",
+    "inventoryReports": "Inventory Reports",
+    "inventoryReportsDescription": "Analyze product turnover and stock levels.",
+    "generateTurnoverReport": "Product Turnover",
+    "turnoverReportDescription": "Export a report showing best-selling and non-selling products.",
+    "generateLowStockReport": "Low Stock",
+    "lowStockReportDescription": "Export a list of products that have reached their minimum stock level.",
+    "productTurnoverReportTitle": "Product Turnover Report",
+    "bestSellers": "Best-Selling Products",
+    "deadStock": "Dead Stock (No Sales)",
+    "quantitySold": "Quantity Sold",
+    "totalRevenue": "Total Revenue",
+    "lowStockReportTitle": "Low Stock Report",
+    "currentStock": "Current Stock",
+    "minStock": "Minimum Stock"
   },
   "settings": {
     "general": "General Settings",
@@ -272,7 +298,7 @@
     "invalidPrice": "Please enter a valid price greater than zero.",
     "endDateAfterStartDate": "The end date must be after the start date.",
     "invalidStock": "Please enter a valid stock value (0 or greater).",
-    "requiredDescription": "Description is required."
+    "requiredDescription": "Description/justification is required."
   },
   "cashControl": {
     "title": "Cash Control",

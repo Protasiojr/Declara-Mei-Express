@@ -1,11 +1,10 @@
 
-
 import React, { useState } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
-import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_CASH_SESSIONS } from '../constants';
-import { Sale, Client, Product, Address, Service } from '../types';
+import { MOCK_CLIENTS, MOCK_COMPANY, MOCK_CASH_SESSIONS } from '../constants';
+import { Sale, Client, Product, Address, SaleItem } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -15,14 +14,19 @@ const formatAddress = (address: Address) => {
     return `${street}, ${number}${complement ? ` - ${complement}` : ''}, ${neighborhood}, ${city} - ${state}, ${zipCode}`;
 };
 
+// FIX: Accept props for state management
+interface ReportsPageProps {
+    sales: Sale[];
+    products: Product[];
+}
 
-const ReportsPage: React.FC = () => {
+const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
     const { t } = useTranslation();
     const [salesStartDate, setSalesStartDate] = useState('');
     const [salesEndDate, setSalesEndDate] = useState('');
 
     const handleExportSalesPDF = () => {
-        const filteredSales = MOCK_SALES.filter(sale => {
+        const filteredSales = sales.filter(sale => {
             if (salesStartDate && sale.date < salesStartDate) return false;
             if (salesEndDate && sale.date > salesEndDate) return false;
             return true;
@@ -149,7 +153,7 @@ const ReportsPage: React.FC = () => {
         doc.text(t('reports.monthlyReportTitle'), 14, 28);
 
         const monthlyTotals: { [key: string]: number } = {};
-        MOCK_SALES.forEach(sale => {
+        sales.forEach(sale => {
             const month = new Date(sale.date + 'T00:00:00').toLocaleString('default', { month: 'long', year: 'numeric' });
             if (!monthlyTotals[month]) {
                 monthlyTotals[month] = 0;
@@ -195,7 +199,7 @@ const ReportsPage: React.FC = () => {
         let industrializedRevenue = 0;
         let serviceRevenue = 0;
 
-        MOCK_SALES.forEach(sale => {
+        sales.forEach(sale => {
             sale.items.forEach(saleItem => {
                 const item = saleItem.item;
                  if ('sku' in item) { // It's a Product
@@ -298,6 +302,90 @@ const ReportsPage: React.FC = () => {
         doc.save('relatorio_sessoes_caixa.pdf');
     };
 
+    // FIX: Add handlers for new inventory reports
+    const handleGenerateProductTurnoverPDF = () => {
+        const doc = new jsPDF();
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+
+        // Header
+        doc.setFontSize(18);
+        doc.text(t('reports.productTurnoverReportTitle'), 14, 22);
+        doc.setFontSize(10);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+
+        const productSales: { [key: number]: { name: string; sku: string; quantitySold: number; totalRevenue: number } } = {};
+
+        products.forEach(p => {
+            productSales[p.id] = { name: p.name, sku: p.sku, quantitySold: 0, totalRevenue: 0 };
+        });
+
+        sales.forEach(sale => {
+            sale.items.forEach(item => {
+                if ('sku' in item.item) {
+                    if (productSales[item.item.id]) {
+                        productSales[item.item.id].quantitySold += item.quantity;
+                        productSales[item.item.id].totalRevenue += item.total;
+                    }
+                }
+            });
+        });
+
+        const sortedProducts = Object.values(productSales).sort((a, b) => b.quantitySold - a.quantitySold);
+        
+        const bestSellers = sortedProducts.filter(p => p.quantitySold > 0);
+        const deadStock = sortedProducts.filter(p => p.quantitySold === 0);
+
+        // Best Sellers Table
+        doc.setFontSize(14);
+        doc.text(t('reports.bestSellers'), 14, 35);
+        autoTable(doc, {
+            startY: 40,
+            head: [[t('products.productName'), t('products.sku'), t('reports.quantitySold'), t('reports.totalRevenue')]],
+            body: bestSellers.map(p => [p.name, p.sku, p.quantitySold, `R$ ${p.totalRevenue.toFixed(2)}`]),
+            theme: 'striped',
+            headStyles: { fillColor: [22, 163, 74] }, // Green
+        });
+
+        // Dead Stock Table
+        if (deadStock.length > 0) {
+            const finalY = (doc as any).lastAutoTable.finalY || 0;
+            doc.setFontSize(14);
+            doc.text(t('reports.deadStock'), 14, finalY + 15);
+            autoTable(doc, {
+                startY: finalY + 20,
+                head: [[t('products.productName'), t('products.sku')]],
+                body: deadStock.map(p => [p.name, p.sku]),
+                theme: 'striped',
+                headStyles: { fillColor: [220, 38, 38] }, // Red
+            });
+        }
+
+        doc.save('relatorio_giro_produtos.pdf');
+    };
+
+    const handleGenerateLowStockPDF = () => {
+        const doc = new jsPDF();
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+
+        // Header
+        doc.setFontSize(18);
+        doc.text(t('reports.lowStockReportTitle'), 14, 22);
+        doc.setFontSize(10);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+
+        const lowStockProducts = products.filter(p => p.currentStock <= p.minStock);
+        
+        autoTable(doc, {
+            startY: 35,
+            head: [[t('products.productName'), t('products.sku'), t('reports.currentStock'), t('reports.minStock')]],
+            body: lowStockProducts.map(p => [p.name, p.sku, p.currentStock, p.minStock]),
+            theme: 'striped',
+            headStyles: { fillColor: [217, 119, 6] }, // Amber
+        });
+
+        doc.save('relatorio_estoque_baixo.pdf');
+    };
+
 
     return (
         <div className="space-y-6">
@@ -318,6 +406,25 @@ const ReportsPage: React.FC = () => {
                                 <input type="date" name="salesEndDate" value={salesEndDate} onChange={(e) => setSalesEndDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
                             </div>
                             <Button onClick={handleExportSalesPDF}>{t('reports.exportPdf')}</Button>
+                        </div>
+                    </div>
+                    
+                    {/* FIX: Add new Inventory Reports section */}
+                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                    <div>
+                        <h4 className="font-semibold text-lg">{t('reports.inventoryReports')}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.inventoryReportsDescription')}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className='p-4 border dark:border-gray-700 rounded-lg'>
+                                <h5 className="font-semibold">{t('reports.generateTurnoverReport')}</h5>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.turnoverReportDescription')}</p>
+                                <Button onClick={handleGenerateProductTurnoverPDF}>{t('reports.exportPdf')}</Button>
+                            </div>
+                            <div className='p-4 border dark:border-gray-700 rounded-lg'>
+                                <h5 className="font-semibold">{t('reports.generateLowStockReport')}</h5>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.lowStockReportDescription')}</p>
+                                <Button onClick={handleGenerateLowStockPDF}>{t('reports.exportPdf')}</Button>
+                            </div>
                         </div>
                     </div>
 

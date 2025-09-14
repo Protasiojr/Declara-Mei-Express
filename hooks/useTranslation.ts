@@ -10,9 +10,10 @@ export const useTranslation = () => {
 
   const { translations, ...rest } = context;
 
-  const t = (key: string): string => {
+  // FIX: The `t` function has been updated to accept an optional `variables` argument for string interpolation. This resolves a TypeScript error where `t` was called with more than one argument.
+  const t = (key: string, variables?: Record<string, string | number>): string => {
     const keys = key.split('.');
-    let result = translations;
+    let result: any = translations;
     for (const k of keys) {
       if (result && typeof result === 'object' && k in result) {
         result = result[k];
@@ -20,7 +21,18 @@ export const useTranslation = () => {
         return key; // Return the key if translation is not found
       }
     }
-    return typeof result === 'string' ? result : key;
+    
+    if (typeof result === 'string') {
+      if (variables) {
+        return Object.entries(variables).reduce(
+          (str, [varKey, varValue]) => str.replace(new RegExp(`{{${varKey}}}`, 'g'), String(varValue)),
+          result
+        );
+      }
+      return result;
+    }
+
+    return key;
   };
 
   return { t, ...rest };
