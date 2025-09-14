@@ -1,4 +1,5 @@
 
+
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
@@ -154,4 +155,17 @@ export interface AccountReceivable {
   dueDate: string;
   paymentDate?: string;
   status: 'Pending' | 'Paid';
+}
+
+export type StockMovementType = 'Entrada' | 'Ajuste' | 'Perda';
+
+export interface StockMovement {
+  id: number;
+  productId: number;
+  productName: string;
+  type: StockMovementType;
+  quantity: number; // can be positive or negative depending on type
+  reason: string;
+  date: string;
+  operatorName: string;
 }

@@ -1,5 +1,6 @@
 
-import { User, Company, Employee, Product, Service, Sale, Client, Address, CashSession, ExpenseCategory, AccountPayable, AccountReceivable } from './types';
+
+import { User, Company, Employee, Product, Service, Sale, Client, Address, CashSession, ExpenseCategory, AccountPayable, AccountReceivable, StockMovement } from './types';
 
 export const MOCK_USER: User = {
   name: 'Usuário Padrão',
@@ -211,4 +212,10 @@ export const MOCK_ACCOUNTS_PAYABLE: AccountPayable[] = [
 export const MOCK_ACCOUNTS_RECEIVABLE: AccountReceivable[] = [
     { id: 1, saleId: MOCK_SALES[2].id, client: MOCK_CLIENTS[1], amount: 155.00, issueDate: '2025-07-18', dueDate: '2025-08-18', status: 'Pending' },
     { id: 2, saleId: 105, client: MOCK_CLIENTS[0], amount: 75.00, issueDate: '2025-06-15', dueDate: '2025-07-15', paymentDate: '2025-07-14', status: 'Paid' },
+];
+
+export const MOCK_STOCK_MOVEMENTS: StockMovement[] = [
+    { id: 1, productId: 1, productName: 'Camiseta Branca', type: 'Entrada', quantity: 50, reason: 'Pedido de compra #123', date: '2025-07-01', operatorName: 'Administrador' },
+    { id: 2, productId: 1, productName: 'Camiseta Branca', type: 'Perda', quantity: -2, reason: 'Produto danificado no estoque', date: '2025-07-15', operatorName: 'Usuário Padrão' },
+    { id: 3, productId: 2, productName: 'Caneca Personalizada', type: 'Ajuste', quantity: 35, reason: 'Contagem de inventário', date: '2025-07-05', operatorName: 'Administrador' },
 ];

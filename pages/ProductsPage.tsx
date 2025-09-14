@@ -1,6 +1,8 @@
 
+
 import React, { useState, useMemo } from 'react';
-import { Product, Service } from '../types';
+// FIX: Import StockMovementType to resolve type error.
+import { Product, Service, StockMovement, User, StockMovementType } from '../types';
 import { MOCK_SERVICES } from '../constants';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -12,11 +14,13 @@ import Modal from '../components/ui/Modal';
 interface ProductsPageProps {
     products: Product[];
     setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+    stockMovements: StockMovement[];
+    setStockMovements: React.Dispatch<React.SetStateAction<StockMovement[]>>;
+    user: User | null;
 }
 
-type AdjustmentMovementType = 'stock-in' | 'adjustment' | 'loss';
 
-const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) => {
+const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stockMovements, setStockMovements, user }) => {
     const { t } = useTranslation();
     const toast = useToast();
     // const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
@@ -32,10 +36,16 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
     const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
     const [productToAdjust, setProductToAdjust] = useState<Product | null>(null);
     const [adjustmentData, setAdjustmentData] = useState({
-        movementType: 'stock-in' as AdjustmentMovementType,
+        // FIX: Use imported StockMovementType
+        movementType: 'Entrada' as StockMovementType,
         quantity: '',
         reason: '',
     });
+    
+    // History Modal State
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+    const [productForHistory, setProductForHistory] = useState<Product | null>(null);
+
 
     const initialProductForm = {
         name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado', sku: '',
@@ -49,17 +59,19 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
     
     const stockAfterAdjustment = useMemo(() => {
         if (!productToAdjust || adjustmentData.quantity === '') return productToAdjust?.currentStock ?? 0;
-        const newQuantity = Number(adjustmentData.quantity);
-        if (isNaN(newQuantity)) return productToAdjust.currentStock;
+        const quantityChange = Number(adjustmentData.quantity);
+        if (isNaN(quantityChange)) return productToAdjust.currentStock;
         
-        if (adjustmentData.movementType === 'stock-in') {
-            return productToAdjust.currentStock + newQuantity;
+        switch (adjustmentData.movementType) {
+            case 'Entrada':
+                return productToAdjust.currentStock + quantityChange;
+            case 'Perda':
+                return productToAdjust.currentStock - quantityChange;
+            case 'Ajuste':
+                return quantityChange; // Sets the new quantity directly
+            default:
+                return productToAdjust.currentStock;
         }
-        if (adjustmentData.movementType === 'loss') {
-            return productToAdjust.currentStock - newQuantity;
-        }
-        // For adjustment, it sets the new quantity directly
-        return newQuantity;
     }, [productToAdjust, adjustmentData.quantity, adjustmentData.movementType]);
 
 
@@ -169,10 +181,10 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
         }
     };
     
-    // FIX: Handlers for the Stock Adjustment modal
+    // Handlers for the Stock Adjustment modal
     const handleOpenAdjustmentModal = (product: Product) => {
         setProductToAdjust(product);
-        setAdjustmentData({ movementType: 'stock-in', quantity: '', reason: '' });
+        setAdjustmentData({ movementType: 'Entrada', quantity: '', reason: '' });
         setIsAdjustmentModalOpen(true);
     };
 
@@ -182,7 +194,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
     };
 
     const handleSaveAdjustment = () => {
-        if (!productToAdjust) return;
+        if (!productToAdjust || !user) return;
         const quantity = Number(adjustmentData.quantity);
         if (isNaN(quantity) || adjustmentData.quantity === '' || quantity < 0) {
             toast.error(t('validation.invalidStock'));
@@ -194,6 +206,19 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
         }
 
         const newStock = stockAfterAdjustment;
+        
+        const newMovement: StockMovement = {
+            id: Date.now(),
+            productId: productToAdjust.id,
+            productName: productToAdjust.name,
+            type: adjustmentData.movementType,
+            quantity: adjustmentData.movementType === 'Perda' ? -quantity : quantity,
+            reason: adjustmentData.reason,
+            date: new Date().toISOString(),
+            operatorName: user.name,
+        };
+        
+        setStockMovements(prev => [newMovement, ...prev]);
 
         setProducts(prevProducts =>
             prevProducts.map(p =>
@@ -204,11 +229,26 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
         setIsAdjustmentModalOpen(false);
     };
 
+    const handleOpenHistoryModal = (product: Product) => {
+        setProductForHistory(product);
+        setIsHistoryModalOpen(true);
+    };
+
     const TabButton: React.FC<{tabId: 'products' | 'services', title: string}> = ({tabId, title}) => (
         <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === tabId ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}>
             {title}
         </button>
     );
+    
+    const getMovementTypeClass = (type: StockMovementType) => {
+        switch (type) {
+            case 'Entrada': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+            case 'Perda': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+            case 'Ajuste': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+            default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+        }
+    };
+
 
     return (
         <div className="space-y-6">
@@ -251,8 +291,8 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-right space-x-2">
-                                            {/* FIX: Add Adjust Stock button */}
+                                        <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                                            <Button variant="secondary" size="sm" onClick={() => handleOpenHistoryModal(product)}>{t('products.history')}</Button>
                                             <Button variant="secondary" size="sm" onClick={() => handleOpenAdjustmentModal(product)}>{t('products.adjustStock')}</Button>
                                             <Button variant="secondary" size="sm" onClick={() => handleOpenModal(product, 'product')}>{t('common.edit')}</Button>
                                             <Button variant="danger" size="sm" onClick={() => handleDelete(product.id, 'product')}>{t('common.delete')}</Button>
@@ -365,21 +405,20 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
                 </div>
             </Modal>
             
-            {/* FIX: Add Stock Adjustment Modal */}
             {productToAdjust && (
                 <Modal isOpen={isAdjustmentModalOpen} onClose={() => setIsAdjustmentModalOpen(false)} title={`${t('products.stockAdjustmentFor')} "${productToAdjust.name}"`}>
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium">{t('products.movementType')}</label>
                             <select name="movementType" value={adjustmentData.movementType} onChange={handleAdjustmentDataChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600">
-                                <option value="stock-in">{t('products.stockInPurchase')}</option>
-                                <option value="adjustment">{t('products.inventoryAdjustment')}</option>
-                                <option value="loss">{t('products.lossDamage')}</option>
+                                <option value="Entrada">{t('products.stockIn')}</option>
+                                <option value="Ajuste">{t('products.adjustment')}</option>
+                                <option value="Perda">{t('products.loss')}</option>
                             </select>
                         </div>
                          <div>
                             <label className="block text-sm font-medium">
-                                {adjustmentData.movementType === 'adjustment' ? t('products.newQuantity') : t('sales.quantity')}
+                                {adjustmentData.movementType === 'Ajuste' ? t('products.newQuantity') : t('sales.quantity')}
                             </label>
                             <input type="number" name="quantity" value={adjustmentData.quantity} onChange={handleAdjustmentDataChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
                         </div>
@@ -401,6 +440,39 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts }) =>
                             <Button variant="secondary" onClick={() => setIsAdjustmentModalOpen(false)}>{t('common.cancel')}</Button>
                             <Button onClick={handleSaveAdjustment}>{t('common.confirm')}</Button>
                         </div>
+                    </div>
+                </Modal>
+            )}
+
+            {productForHistory && (
+                 <Modal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} title={`${t('products.movementHistoryFor')} "${productForHistory.name}"`}>
+                    <div className="max-h-[60vh] overflow-y-auto">
+                        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400 sticky top-0">
+                                <tr>
+                                    <th className="px-4 py-2">{t('products.date')}</th>
+                                    <th className="px-4 py-2">{t('products.movementType')}</th>
+                                    <th className="px-4 py-2">{t('sales.quantity')}</th>
+                                    <th className="px-4 py-2">{t('products.reason')}</th>
+                                    <th className="px-4 py-2">{t('products.user')}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stockMovements.filter(m => m.productId === productForHistory.id).map(movement => (
+                                     <tr key={movement.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                        <td className="px-4 py-2">{new Date(movement.date).toLocaleString()}</td>
+                                        <td className="px-4 py-2">
+                                            <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getMovementTypeClass(movement.type)}`}>
+                                                {t(`products.${movement.type.toLowerCase()}`)}
+                                            </span>
+                                        </td>
+                                        <td className="px-4 py-2">{movement.quantity}</td>
+                                        <td className="px-4 py-2">{movement.reason}</td>
+                                        <td className="px-4 py-2">{movement.operatorName}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </Modal>
             )}

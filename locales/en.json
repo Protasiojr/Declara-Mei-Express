@@ -1,5 +1,4 @@
 
-
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -217,14 +216,22 @@
     "adjustStock": "Adjust Stock",
     "stockAdjustmentFor": "Adjust Stock for",
     "movementType": "Movement Type",
-    "stockInPurchase": "Stock-in (Purchase)",
-    "inventoryAdjustment": "Inventory Adjustment",
-    "lossDamage": "Loss/Damage",
+    "stockIn": "Stock-in (Purchase)",
+    "adjustment": "Inventory Adjustment",
+    "loss": "Loss/Damage",
     "newQuantity": "New Quantity",
     "currentStockIs": "Current Stock",
     "stockAfterIs": "Stock After Adjustment",
     "adjustmentReason": "Reason for Movement",
-    "stockAdjustSuccess": "Stock adjusted successfully!"
+    "stockAdjustSuccess": "Stock adjusted successfully!",
+    "history": "History",
+    "movementHistoryFor": "Movement History for",
+    "date": "Date",
+    "user": "User",
+    "reason": "Reason",
+    "entrada": "Stock-in",
+    "ajuste": "Adjustment",
+    "perda": "Loss"
   },
   "services": {
     "serviceRegistry": "Services",
@@ -379,7 +386,8 @@
     "surplus": "Surplus",
     "shortage": "Shortage",
     "confirmCloseCash": "Confirm Closing",
-    "cashClosedSuccess": "Cash register closed successfully!"
+    "cashClosedSuccess": "Cash register closed successfully!",
+    "operationCanceled": "Operation canceled. Returning to dashboard."
   },
   "financial": {
     "title": "Financial Management",

@@ -1,9 +1,8 @@
 
-
 import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User, AccountReceivable } from '../types';
+import { Page, Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User, AccountReceivable } from '../types';
 import { MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER, MOCK_CASH_SESSIONS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
@@ -16,9 +15,10 @@ interface SalesPageProps {
     sales: Sale[];
     setSales: React.Dispatch<React.SetStateAction<Sale[]>>;
     setAccountsReceivable: React.Dispatch<React.SetStateAction<AccountReceivable[]>>;
+    setCurrentPage: (page: Page) => void;
 }
 
-const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales, setAccountsReceivable }) => {
+const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales, setAccountsReceivable, setCurrentPage }) => {
     const { t } = useTranslation();
     const toast = useToast();
     
@@ -434,10 +434,15 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
         doc.save(`recibo_venda_${sale.id}.pdf`);
     };
     
+    const handleCloseOpeningModal = () => {
+        toast.info(t('cashControl.operationCanceled'));
+        setCurrentPage(Page.Dashboard);
+    };
+
     if (!currentCashSession) {
         return (
             <div className="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex items-center justify-center">
-                 <Modal isOpen={isOpeningModalOpen} onClose={() => {}} title={t('cashControl.openCash')}>
+                 <Modal isOpen={isOpeningModalOpen} onClose={handleCloseOpeningModal} title={t('cashControl.openCash')}>
                     <div className="space-y-4">
                         <p>{t('cashControl.openCashPrompt')}</p>
                         <div>

@@ -1,7 +1,6 @@
 
-
 import React, { useState } from 'react';
-import { Page, Product, Sale, AccountPayable, AccountReceivable } from './types';
+import { Page, Product, Sale, AccountPayable, AccountReceivable, StockMovement } from './types';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -17,7 +16,7 @@ import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
-import { MOCK_PRODUCTS, MOCK_SALES, MOCK_ACCOUNTS_PAYABLE, MOCK_ACCOUNTS_RECEIVABLE } from './constants';
+import { MOCK_PRODUCTS, MOCK_SALES, MOCK_ACCOUNTS_PAYABLE, MOCK_ACCOUNTS_RECEIVABLE, MOCK_STOCK_MOVEMENTS } from './constants';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -29,6 +28,7 @@ const App: React.FC = () => {
   const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
   const [accountsPayable, setAccountsPayable] = useState<AccountPayable[]>(MOCK_ACCOUNTS_PAYABLE);
   const [accountsReceivable, setAccountsReceivable] = useState<AccountReceivable[]>(MOCK_ACCOUNTS_RECEIVABLE);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>(MOCK_STOCK_MOVEMENTS);
 
 
   const renderPage = () => {
@@ -40,9 +40,15 @@ const App: React.FC = () => {
       case Page.Client:
         return <ClientPage />;
       case Page.Sales:
-        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} />;
+        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} setCurrentPage={setCurrentPage} />;
       case Page.Products:
-        return <ProductsPage products={products} setProducts={setProducts} />;
+        return <ProductsPage 
+                  products={products} 
+                  setProducts={setProducts}
+                  stockMovements={stockMovements}
+                  setStockMovements={setStockMovements}
+                  user={user}
+                />;
       case Page.Financial:
         return <FinancialPage 
                   accountsPayable={accountsPayable}

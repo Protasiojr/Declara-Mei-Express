@@ -1,5 +1,4 @@
 
-
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -217,14 +216,22 @@
     "adjustStock": "Ajustar Estoque",
     "stockAdjustmentFor": "Ajustar Estoque de",
     "movementType": "Tipo de Movimentação",
-    "stockInPurchase": "Entrada (Compra)",
-    "inventoryAdjustment": "Ajuste de Inventário",
-    "lossDamage": "Perda/Dano",
+    "stockIn": "Entrada (Compra)",
+    "adjustment": "Ajuste de Inventário",
+    "loss": "Perda/Dano",
     "newQuantity": "Nova Quantidade",
     "currentStockIs": "Estoque Atual",
     "stockAfterIs": "Estoque Após Ajuste",
     "adjustmentReason": "Justificativa da Movimentação",
-    "stockAdjustSuccess": "Estoque ajustado com sucesso!"
+    "stockAdjustSuccess": "Estoque ajustado com sucesso!",
+    "history": "Histórico",
+    "movementHistoryFor": "Histórico de Movimentações para",
+    "date": "Data",
+    "user": "Usuário",
+    "reason": "Justificativa",
+    "entrada": "Entrada",
+    "ajuste": "Ajuste",
+    "perda": "Perda"
   },
   "services": {
     "serviceRegistry": "Serviços",
@@ -379,7 +386,8 @@
     "surplus": "Sobra",
     "shortage": "Falta",
     "confirmCloseCash": "Confirmar Fechamento",
-    "cashClosedSuccess": "Caixa fechado com sucesso!"
+    "cashClosedSuccess": "Caixa fechado com sucesso!",
+    "operationCanceled": "Operação cancelada. Retornando ao dashboard."
   },
   "financial": {
     "title": "Gestão Financeira",
