@@ -8,7 +8,10 @@ import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 import BarcodeScanner from '../components/ui/BarcodeScanner';
-import { BarcodeIcon } from '../components/icons';
+import ProductGrid from '../components/sales/ProductGrid';
+import CartPanel from '../components/sales/CartPanel';
+import CashControlPanel from '../components/sales/CashControlPanel';
+import PaymentModal from '../components/sales/PaymentModal';
 
 interface SalesPageProps {
     products: Product[];
@@ -22,6 +25,8 @@ interface SalesPageProps {
     emailSettings: { managerEmail: string };
 }
 
+const CART_STORAGE_KEY = 'declaraMeiCart';
+
 const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales, setAccountsReceivable, setCurrentPage, cashSessions, setCashSessions, emailSettings }) => {
     const { t } = useTranslation();
     const toast = useToast();
@@ -31,9 +36,46 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [user] = useState<User>(MOCK_USER);
 
     // POS states
-    const [cart, setCart] = useState<SaleItem[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+    const [cart, setCart] = useState<SaleItem[]>(() => {
+        try {
+            const savedState = localStorage.getItem(CART_STORAGE_KEY);
+            if (!savedState) return [];
+            const { cart: savedCart } = JSON.parse(savedState);
+            return Array.isArray(savedCart) ? savedCart : [];
+        } catch (error) {
+            console.error("Failed to parse cart from localStorage", error);
+            return [];
+        }
+    });
+
+    const [selectedClient, setSelectedClient] = useState<Client | null>(() => {
+        try {
+            const savedState = localStorage.getItem(CART_STORAGE_KEY);
+            if (!savedState) return null;
+            const { selectedClientId } = JSON.parse(savedState);
+            if (!selectedClientId) return null;
+            return clients.find(c => c.id === selectedClientId) || null;
+        } catch (error) {
+            console.error("Failed to parse selected client from localStorage", error);
+            return null;
+        }
+    });
+
+    // Cart persistence effect
+    useEffect(() => {
+        try {
+            const stateToSave = {
+                cart,
+                selectedClientId: selectedClient?.id ?? null,
+            };
+            localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(stateToSave));
+        } catch (error) {
+            console.error("Failed to save cart state to localStorage", error);
+        }
+    }, [cart, selectedClient]);
+
 
     // Cash Control State - Derived from props for consistency
     const currentCashSession = useMemo(() => cashSessions.find(s => s.status === 'Open'), [cashSessions]);
@@ -87,21 +129,12 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
 
     const availableItems: (Product | Service)[] = useMemo(() => [...products, ...services], [products, services]);
 
-    const filteredItems = useMemo(() => {
-        if (!searchTerm) return availableItems;
-        const lowercasedSearch = searchTerm.toLowerCase();
-        return availableItems.filter(item =>
-            item.name.toLowerCase().includes(lowercasedSearch) ||
-            ('sku' in item && item.sku.toLowerCase().includes(lowercasedSearch))
-        );
-    }, [searchTerm, availableItems]);
-
     const { subtotal, total } = useMemo(() => {
         const sub = cart.reduce((acc, item) => acc + item.total, 0);
         return { subtotal: sub, total: sub }; // Placeholder for discount logic
     }, [cart]);
     
-    const { totalPaid, changeDue, remainingAmount } = useMemo(() => {
+    const { changeDue, remainingAmount } = useMemo(() => {
         const paid = payments.reduce((acc, p) => acc + p.amount, 0);
         const remaining = total - paid;
         let change = 0;
@@ -110,7 +143,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
              change = cashTendered - (cashPayment.amount - (paid - total));
         }
 
-        return { totalPaid: paid, changeDue: change > 0 ? change : 0, remainingAmount: remaining > 0 ? remaining : 0 };
+        return { changeDue: change > 0 ? change : 0, remainingAmount: remaining > 0 ? remaining : 0 };
     }, [payments, total, cashTendered]);
 
     const cashClosingTotals = useMemo(() => {
@@ -586,94 +619,30 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
 
     return (
         <div className="flex flex-col md:flex-row h-full gap-4 -m-6 p-2">
-            {/* Left side: Product Selection */}
-            <div className="w-full md:w-3/5 lg:w-2/3 flex flex-col">
-                <div className="p-4 flex gap-2">
-                    <input
-                        type="text"
-                        placeholder={t('sales.searchPlaceholder')}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full p-3 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-primary-500 focus:border-primary-500"
-                    />
-                    <Button variant="secondary" onClick={() => setIsScannerModalOpen(true)} className="flex items-center gap-2">
-                        <BarcodeIcon />
-                        <span className="hidden sm:inline">{t('sales.scanBarcode')}</span>
-                    </Button>
-                </div>
-                <div className="flex-grow overflow-y-auto p-4">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {filteredItems.map(item => (
-                            <button key={`${'sku' in item ? 'p' : 's'}-${item.id}`} onClick={() => addToCart(item)} className="p-2 border dark:border-gray-700 rounded-lg text-center bg-white dark:bg-gray-800 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors">
-                                <div className="w-full h-20 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center mb-2">
-                                     <span className="text-gray-500 text-xs">Sem Imagem</span>
-                                </div>
-                                <p className="text-sm font-semibold truncate">{item.name}</p>
-                                <p className="text-xs text-primary-600 dark:text-primary-400">R$ {item.price.toFixed(2)}</p>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
+            <ProductGrid
+                items={availableItems}
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                onAddToCart={addToCart}
+                onOpenScanner={() => setIsScannerModalOpen(true)}
+            />
 
             {/* Right side: Cart & Cash Control */}
             <div className="w-full md:w-2/5 lg:w-1/3 bg-white dark:bg-gray-800 rounded-lg shadow-lg flex flex-col p-4">
-                <div className="flex justify-between items-center">
-                    <h2 className="text-xl font-bold">{t('sales.currentSale')}</h2>
-                    <Button onClick={() => setIsHistoryModalOpen(true)} variant="secondary">{t('sales.saleHistory')}</Button>
-                </div>
-                 <div className="flex-grow overflow-y-auto border-y dark:border-gray-700 -mx-4 px-4 py-2 my-4">
-                    {cart.length === 0 ? (
-                        <p className="text-gray-500 text-center py-10">{t('sales.emptyCart')}</p>
-                    ) : (
-                        cart.map(cartItem => (
-                            <div key={`${'sku' in cartItem.item ? 'p' : 's'}-${cartItem.item.id}`} className="flex items-center py-2 border-b dark:border-gray-700 last:border-b-0">
-                                <div className="flex-grow">
-                                    <p className="font-semibold">{cartItem.item.name}</p>
-                                    <p className="text-sm text-gray-500">R$ {cartItem.unitPrice.toFixed(2)}</p>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="number"
-                                        value={cartItem.quantity}
-                                        onChange={(e) => updateQuantity(cartItem.item.id, 'sku' in cartItem.item, Number(e.target.value))}
-                                        className="w-16 p-1 text-center rounded border bg-gray-100 dark:bg-gray-700"
-                                    />
-                                    <p className="w-20 text-right font-semibold">R$ {cartItem.total.toFixed(2)}</p>
-                                </div>
-                            </div>
-                        ))
-                    )}
-                </div>
-
-                <div className="space-y-2 mb-4">
-                    <div className="flex justify-between">
-                        <span>{t('sales.subtotal')}</span>
-                        <span>R$ {subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-2xl font-bold">
-                        <span>{t('sales.total')}</span>
-                        <span>R$ {total.toFixed(2)}</span>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                    <Button variant="danger" onClick={cancelSale} disabled={cart.length === 0}>{t('sales.cancelSale')}</Button>
-                    <Button onClick={handlePayment} disabled={cart.length === 0}>{t('sales.finalizePayment')}</Button>
-                </div>
-                
-                {/* Cash Control Panel */}
-                <div className="border-t dark:border-gray-700 pt-4 mt-auto space-y-2 text-sm">
-                    <h3 className="font-bold text-base mb-2">{t('cashControl.title')}</h3>
-                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.status')}</span> <span className="font-semibold text-green-500">{t('cashControl.statusOpen')}</span></div>
-                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.operator')}</span> <span>{currentCashSession.operatorName}</span></div>
-                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.openedAt')}</span> <span>{new Date(currentCashSession.openedAt).toLocaleTimeString()}</span></div>
-                     <div className="flex justify-between"><span className="text-gray-500">{t('cashControl.openingBalance')}</span> <span>R$ {currentCashSession.openingBalance.toFixed(2)}</span></div>
-                     <div className="grid grid-cols-2 gap-2 mt-2">
-                        <Button variant="secondary" onClick={() => setIsMovementModalOpen(true)}>{t('cashControl.cashMovement')}</Button>
-                        <Button variant="primary" onClick={() => setIsClosingModalOpen(true)}>{t('cashControl.closeCash')}</Button>
-                    </div>
-                </div>
+                <CartPanel
+                    cart={cart}
+                    subtotal={subtotal}
+                    total={total}
+                    onUpdateQuantity={updateQuantity}
+                    onCancelSale={cancelSale}
+                    onFinalizePayment={handlePayment}
+                    onOpenHistory={() => setIsHistoryModalOpen(true)}
+                />
+                <CashControlPanel
+                    currentCashSession={currentCashSession}
+                    onOpenMovementModal={() => setIsMovementModalOpen(true)}
+                    onOpenClosingModal={() => setIsClosingModalOpen(true)}
+                />
             </div>
 
             {isScannerModalOpen && (
@@ -682,80 +651,24 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                 </Modal>
             )}
 
-            {/* Payment Modal */}
-            <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} title={t('sales.finalizePayment')}>
-                <div className="space-y-4">
-                    <div className="p-4 bg-gray-100 dark:bg-gray-900 rounded-lg text-center">
-                        <p className="text-sm text-gray-500">{t('sales.totalPayable')}</p>
-                        <p className="text-4xl font-bold">R$ {total.toFixed(2)}</p>
-                    </div>
-                     {remainingAmount > 0 && 
-                        <div className="p-2 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg text-center">
-                            <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">{t('sales.remaining')}: R$ {remainingAmount.toFixed(2)}</p>
-                        </div>
-                    }
-                    {totalPaid > total && 
-                         <div className="p-2 bg-green-100 dark:bg-green-900/50 rounded-lg text-center">
-                            <p className="text-sm font-semibold text-green-800 dark:text-green-300">{t('sales.changeDue')}: R$ {changeDue.toFixed(2)}</p>
-                        </div>
-                    }
-                    
-                    <div>
-                        <h4 className="font-semibold mb-2">{t('sales.paymentMethod')}</h4>
-                        <div className="grid grid-cols-2 gap-2 mb-4">
-                            <Button variant='secondary' onClick={() => addPayment('Cash')}>{t('sales.cash')}</Button>
-                            <Button variant='secondary' onClick={() => addPayment('Debit Card')}>{t('sales.debitcard')}</Button>
-                            <Button variant='secondary' onClick={() => addPayment('Credit Card')}>{t('sales.creditcard')}</Button>
-                            <Button variant='secondary' onClick={() => addPayment('Pix')}>{t('sales.pix')}</Button>
-                        </div>
-                         <div>
-                            <label className="block text-sm font-medium mb-1">{t('sales.client')}</label>
-                            <select
-                                value={selectedClient?.id || ''}
-                                onChange={(e) => setSelectedClient(clients.find(c => c.id === Number(e.target.value)) || null)}
-                                className="w-full p-2 rounded border bg-gray-100 dark:bg-gray-700"
-                            >
-                                <option value="">{t('sales.clientTypeConsumer')}</option>
-                                {clients.map(c => <option key={c.id} value={c.id}>{c.fullName}</option>)}
-                            </select>
-                             {selectedClient && !payments.some(p => p.method === 'On Account') && (
-                                <div className="mt-2 space-y-2 p-3 border dark:border-gray-600 rounded-md">
-                                    <p className="text-sm font-semibold">{t('sales.onAccountPaymentFor', { clientName: selectedClient.fullName })}</p>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.dueDate')}</label>
-                                        <input
-                                            type="date"
-                                            value={onAccountDueDate}
-                                            onChange={e => setOnAccountDueDate(e.target.value)}
-                                            className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700"
-                                        />
-                                    </div>
-                                    <Button variant='secondary' onClick={() => addPayment('On Account')} className="w-full mt-2" disabled={!selectedClient}>{t('sales.onaccount')}</Button>
-                                </div>
-                             )}
-                        </div>
-                    </div>
-                    
-                    {payments.length > 0 && (
-                        <div>
-                            <h4 className="font-semibold mb-2">{t('sales.paymentsMade')}</h4>
-                             {payments.map((p, i) => (
-                                <div key={i} className="flex items-center justify-between gap-2 mb-2 p-2 bg-gray-50 dark:bg-gray-700/50 rounded">
-                                    <span>{t(`sales.${p.method.toLowerCase().replace(' ', '')}`)}</span>
-                                    {p.method === 'Cash' ? (
-                                        <input type="number" value={cashTendered ?? ''} onChange={e => setCashTendered(Number(e.target.value))} placeholder={t('sales.amountTendered')} className="w-28 p-1 text-right rounded border bg-gray-100 dark:bg-gray-700" />
-                                    ): <span className="font-semibold">R$ {p.amount.toFixed(2)}</span> }
-                                    <button onClick={() => removePayment(i)} className="text-red-500">X</button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-
-                    <div className="flex justify-end pt-4">
-                        <Button onClick={handleConfirmPayment} disabled={remainingAmount > 0.001}>{t('common.confirm')}</Button>
-                    </div>
-                </div>
-            </Modal>
+            <PaymentModal
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                total={total}
+                remainingAmount={remainingAmount}
+                changeDue={changeDue}
+                payments={payments}
+                clients={clients}
+                selectedClient={selectedClient}
+                onSelectClient={setSelectedClient}
+                onAddPayment={addPayment}
+                onRemovePayment={removePayment}
+                onConfirmPayment={handleConfirmPayment}
+                cashTendered={cashTendered}
+                onCashTenderedChange={setCashTendered}
+                onAccountDueDate={onAccountDueDate}
+                onOnAccountDueDateChange={setOnAccountDueDate}
+            />
             
             {/* Sales History Modal */}
             <Modal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} title={t('sales.saleHistory')}>
