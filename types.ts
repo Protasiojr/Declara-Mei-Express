@@ -74,6 +74,7 @@ export interface Product {
   minStock: number;
   currentStock: number;
   type: 'Regular' | 'Industrializado';
+  barcode?: string;
 }
 
 export interface Service {

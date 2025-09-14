@@ -93,9 +93,9 @@ export const MOCK_CLIENTS: Client[] = [
 ];
 
 export const MOCK_PRODUCTS: Product[] = [
-  { id: 1, sku: 'CM-BR-01', name: 'Camiseta Branca', category: 'Vestuário', description: 'Camiseta de algodão branca, gola redonda.', unitOfMeasure: 'un', costPrice: 12.00, price: 25.00, minStock: 10, currentStock: 50, type: 'Regular' },
-  { id: 2, sku: 'CN-PR-02', name: 'Caneca Personalizada', category: 'Utensílios', description: 'Caneca de cerâmica com estampa personalizada.', unitOfMeasure: 'un', costPrice: 7.50, price: 15.50, minStock: 20, currentStock: 35, type: 'Industrializado' },
-  { id: 3, sku: 'BN-PT-03', name: 'Boné Preto', category: 'Acessórios', description: 'Boné de aba curva, cor preta.', unitOfMeasure: 'un', costPrice: 15.00, price: 30.00, minStock: 5, currentStock: 15, type: 'Regular' },
+  { id: 1, sku: 'CM-BR-01', name: 'Camiseta Branca', category: 'Vestuário', description: 'Camiseta de algodão branca, gola redonda.', unitOfMeasure: 'un', costPrice: 12.00, price: 25.00, minStock: 10, currentStock: 50, type: 'Regular', barcode: '7890000000019' },
+  { id: 2, sku: 'CN-PR-02', name: 'Caneca Personalizada', category: 'Utensílios', description: 'Caneca de cerâmica com estampa personalizada.', unitOfMeasure: 'un', costPrice: 7.50, price: 15.50, minStock: 20, currentStock: 35, type: 'Industrializado', barcode: '7890000000026' },
+  { id: 3, sku: 'BN-PT-03', name: 'Boné Preto', category: 'Acessórios', description: 'Boné de aba curva, cor preta.', unitOfMeasure: 'un', costPrice: 15.00, price: 30.00, minStock: 5, currentStock: 15, type: 'Regular', barcode: '7890000000033' },
 ];
 
 export const MOCK_SERVICES: Service[] = [

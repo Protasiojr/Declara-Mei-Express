@@ -188,7 +188,12 @@
     "gatewayDisclaimer": "Atenção: Esta é uma tela de simulação. Não insira dados de cartão reais.",
     "payAmount": "Pagar",
     "processingPayment": "Processando...",
-    "paymentApproved": "Pagamento Aprovado!"
+    "paymentApproved": "Pagamento Aprovado!",
+    "scanBarcode": "Escanear Código",
+    "scannerModalTitle": "Escanear Código de Barras",
+    "noProductFoundForBarcode": "Nenhum produto encontrado para o código de barras: {barcode}",
+    "cameraPermissionDenied": "Permissão da câmera negada. Por favor, habilite o acesso à câmera nas configurações do seu navegador.",
+    "barcodeDetectorNotSupported": "O leitor de código de barras não é suportado neste navegador."
   },
   "products": {
     "title": "Produtos",
@@ -234,7 +239,11 @@
     "reason": "Justificativa",
     "entrada": "Entrada",
     "ajuste": "Ajuste",
-    "perda": "Perda"
+    "perda": "Perda",
+    "barcode": "Código de Barras",
+    "viewBarcode": "Ver Código",
+    "printBarcode": "Imprimir Código de Barras",
+    "barcodeModalTitle": "Código de Barras do Produto"
   },
   "services": {
     "serviceRegistry": "Serviços",
@@ -364,7 +373,8 @@
     "invalidPrice": "Por favor, insira um preço válido maior que zero.",
     "endDateAfterStartDate": "A data final deve ser posterior à data inicial.",
     "invalidStock": "Por favor, insira um valor de estoque válido (0 ou maior).",
-    "requiredDescription": "A descrição/justificativa é obrigatória."
+    "requiredDescription": "A descrição/justificativa é obrigatória.",
+    "invalidBarcode": "O código de barras deve conter apenas números."
   },
   "cashControl": {
     "title": "Controle de Caixa",

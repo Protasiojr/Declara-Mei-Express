@@ -1,7 +1,6 @@
 
 
-import React, { useState, useMemo } from 'react';
-// FIX: Import StockMovementType to resolve type error.
+import React, { useState, useMemo, useRef } from 'react';
 import { Product, Service, StockMovement, User, StockMovementType } from '../types';
 import { MOCK_SERVICES } from '../constants';
 import Card from '../components/ui/Card';
@@ -9,8 +8,8 @@ import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
+import BarcodeGenerator from '../components/ui/BarcodeGenerator';
 
-// FIX: Accept props for state management
 interface ProductsPageProps {
     products: Product[];
     setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
@@ -23,33 +22,31 @@ interface ProductsPageProps {
 const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stockMovements, setStockMovements, user }) => {
     const { t } = useTranslation();
     const toast = useToast();
-    // const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
     const [services, setServices] = useState<Service[]>(MOCK_SERVICES);
     const [activeTab, setActiveTab] = useState<'products' | 'services'>('products');
     
-    // Modal state for both products and services
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState<'product' | 'service'>('product');
     const [currentItemId, setCurrentItemId] = useState<number | null>(null);
     
-    // FIX: Add state for the new Stock Adjustment Modal
     const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
     const [productToAdjust, setProductToAdjust] = useState<Product | null>(null);
     const [adjustmentData, setAdjustmentData] = useState({
-        // FIX: Use imported StockMovementType
         movementType: 'Entrada' as StockMovementType,
         quantity: '',
         reason: '',
     });
     
-    // History Modal State
     const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
     const [productForHistory, setProductForHistory] = useState<Product | null>(null);
 
+    const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false);
+    const [productForBarcode, setProductForBarcode] = useState<Product | null>(null);
+    const barcodePrintRef = useRef<HTMLDivElement>(null);
 
     const initialProductForm = {
         name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado', sku: '',
-        category: '', description: '', unitOfMeasure: 'un', costPrice: '', minStock: '', currentStock: ''
+        category: '', description: '', unitOfMeasure: 'un', costPrice: '', minStock: '', currentStock: '', barcode: ''
     };
     const initialServiceForm = { name: '', price: '' };
 
@@ -68,7 +65,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
             case 'Perda':
                 return productToAdjust.currentStock - quantityChange;
             case 'Ajuste':
-                return quantityChange; // Sets the new quantity directly
+                return quantityChange;
             default:
                 return productToAdjust.currentStock;
         }
@@ -87,6 +84,10 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
             if (!productFormData.costPrice || isNaN(costPriceNum) || costPriceNum <= 0) { newErrors.costPrice = t('validation.invalidPrice'); isValid = false; }
             const currentStockNum = Number(productFormData.currentStock);
             if (productFormData.currentStock === '' || isNaN(currentStockNum) || currentStockNum < 0) { newErrors.currentStock = t('validation.invalidStock'); isValid = false; }
+            if (productFormData.barcode && !/^\d+$/.test(productFormData.barcode)) {
+                newErrors.barcode = t('validation.invalidBarcode');
+                isValid = false;
+            }
         } else { // service
             if (!serviceFormData.name.trim()) { newErrors.name = t('validation.required'); isValid = false; }
             const priceNum = Number(serviceFormData.price);
@@ -107,7 +108,8 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
                     price: String(item.price),
                     costPrice: String(item.costPrice),
                     minStock: String(item.minStock),
-                    currentStock: String(item.currentStock)
+                    currentStock: String(item.currentStock),
+                    barcode: item.barcode || ''
                 });
             } else if (type === 'service' && !('sku' in item)) {
                 setServiceFormData({ name: item.name, price: String(item.price) });
@@ -140,6 +142,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
                 costPrice: Number(productFormData.costPrice),
                 minStock: Number(productFormData.minStock),
                 currentStock: Number(productFormData.currentStock),
+                barcode: productFormData.barcode,
             };
             if (currentItemId) {
                 setProducts(products.map(p => p.id === currentItemId ? { ...p, ...productData } : p));
@@ -181,7 +184,6 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
         }
     };
     
-    // Handlers for the Stock Adjustment modal
     const handleOpenAdjustmentModal = (product: Product) => {
         setProductToAdjust(product);
         setAdjustmentData({ movementType: 'Entrada', quantity: '', reason: '' });
@@ -233,6 +235,23 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
         setProductForHistory(product);
         setIsHistoryModalOpen(true);
     };
+    
+    const handleOpenBarcodeModal = (product: Product) => {
+        setProductForBarcode(product);
+        setIsBarcodeModalOpen(true);
+    };
+
+    const handlePrintBarcode = () => {
+        const printContent = barcodePrintRef.current;
+        if (printContent) {
+            const originalContents = document.body.innerHTML;
+            const printSection = printContent.innerHTML;
+            document.body.innerHTML = `<html><head><title>${t('products.printBarcode')}</title></head><body>${printSection}</body></html>`;
+            window.print();
+            document.body.innerHTML = originalContents;
+            window.location.reload(); // Reload to restore scripts and event listeners
+        }
+    };
 
     const TabButton: React.FC<{tabId: 'products' | 'services', title: string}> = ({tabId, title}) => (
         <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === tabId ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}>
@@ -274,6 +293,7 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
                                     <th className="px-6 py-3">{t('products.productName')}</th>
                                     <th className="px-6 py-3">{t('products.price')}</th>
                                     <th className="px-6 py-3">{t('products.currentStock')}</th>
+                                    <th className="px-6 py-3">{t('products.barcode')}</th>
                                     <th className="px-6 py-3 text-right">{t('products.actions')}</th>
                                 </tr>
                             </thead>
@@ -291,7 +311,9 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
                                                 )}
                                             </div>
                                         </td>
+                                        <td className="px-6 py-4">{product.barcode || '-'}</td>
                                         <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
+                                            <Button variant="secondary" size="sm" onClick={() => handleOpenBarcodeModal(product)} disabled={!product.barcode}>{t('products.viewBarcode')}</Button>
                                             <Button variant="secondary" size="sm" onClick={() => handleOpenHistoryModal(product)}>{t('products.history')}</Button>
                                             <Button variant="secondary" size="sm" onClick={() => handleOpenAdjustmentModal(product)}>{t('products.adjustStock')}</Button>
                                             <Button variant="secondary" size="sm" onClick={() => handleOpenModal(product, 'product')}>{t('common.edit')}</Button>
@@ -339,6 +361,11 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
                                 <label className="block text-sm font-medium">{t('products.productName')}</label>
                                 <input type="text" name="name" value={productFormData.name} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
                                 {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium">{t('products.barcode')}</label>
+                                <input type="text" name="barcode" value={productFormData.barcode} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.barcode ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+                                {errors.barcode && <p className="text-sm text-red-500 mt-1">{errors.barcode}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium">{t('products.sku')}</label>
@@ -476,6 +503,25 @@ const ProductsPage: React.FC<ProductsPageProps> = ({ products, setProducts, stoc
                     </div>
                 </Modal>
             )}
+
+            {productForBarcode && (
+                 <Modal isOpen={isBarcodeModalOpen} onClose={() => setIsBarcodeModalOpen(false)} title={t('products.barcodeModalTitle')}>
+                    <div className="space-y-4 text-center">
+                        <div ref={barcodePrintRef} className="printable-area">
+                            <h4 className="text-lg font-semibold">{productForBarcode.name}</h4>
+                            <p className="text-sm text-gray-500">{productForBarcode.barcode}</p>
+                            <div className="flex justify-center my-4">
+                                {productForBarcode.barcode && <BarcodeGenerator value={productForBarcode.barcode} />}
+                            </div>
+                        </div>
+                        <div className="flex justify-center space-x-2">
+                            <Button variant="secondary" onClick={() => setIsBarcodeModalOpen(false)}>{t('common.cancel')}</Button>
+                            <Button onClick={handlePrintBarcode}>{t('products.printBarcode')}</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
         </div>
     );
 };

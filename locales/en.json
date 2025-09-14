@@ -188,7 +188,12 @@
     "gatewayDisclaimer": "Warning: This is a simulation screen. Do not enter real card data.",
     "payAmount": "Pay",
     "processingPayment": "Processing...",
-    "paymentApproved": "Payment Approved!"
+    "paymentApproved": "Payment Approved!",
+    "scanBarcode": "Scan Barcode",
+    "scannerModalTitle": "Scan Barcode",
+    "noProductFoundForBarcode": "No product found for barcode: {barcode}",
+    "cameraPermissionDenied": "Camera permission denied. Please enable camera access in your browser settings.",
+    "barcodeDetectorNotSupported": "Barcode detector is not supported in this browser."
   },
   "products": {
     "title": "Products",
@@ -234,7 +239,11 @@
     "reason": "Justification",
     "entrada": "Stock In",
     "ajuste": "Adjustment",
-    "perda": "Loss"
+    "perda": "Loss",
+    "barcode": "Barcode",
+    "viewBarcode": "View Code",
+    "printBarcode": "Print Barcode",
+    "barcodeModalTitle": "Product Barcode"
   },
   "services": {
     "serviceRegistry": "Services",
@@ -364,7 +373,8 @@
     "invalidPrice": "Please enter a valid price greater than zero.",
     "endDateAfterStartDate": "The end date must be after the start date.",
     "invalidStock": "Please enter a valid stock value (0 or greater).",
-    "requiredDescription": "Description/justification is required."
+    "requiredDescription": "Description/justification is required.",
+    "invalidBarcode": "Barcode must contain only numbers."
   },
   "cashControl": {
     "title": "Cash Control",

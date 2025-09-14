@@ -7,6 +7,8 @@ import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
+import BarcodeScanner from '../components/ui/BarcodeScanner';
+import { BarcodeIcon } from '../components/icons';
 
 interface SalesPageProps {
     products: Product[];
@@ -47,6 +49,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [isPostClosingModalOpen, setIsPostClosingModalOpen] = useState(false);
     const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [isEmailPromptOpen, setIsEmailPromptOpen] = useState(false);
+    const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
     const [lastSale, setLastSale] = useState<Sale | null>(null);
     const [lastClosedSession, setLastClosedSession] = useState<CashSession | null>(null);
     
@@ -169,6 +172,16 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                 return [...currentCart, { item, quantity: 1, unitPrice: item.price, total: item.price }];
             }
         });
+    };
+
+    const handleScanSuccess = (barcode: string) => {
+        setIsScannerModalOpen(false);
+        const product = products.find(p => p.barcode === barcode);
+        if (product) {
+            addToCart(product);
+        } else {
+            toast.error(t('sales.noProductFoundForBarcode', { barcode }));
+        }
     };
 
     const updateQuantity = (itemId: number, isProduct: boolean, newQuantity: number) => {
@@ -575,7 +588,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
         <div className="flex flex-col md:flex-row h-full gap-4 -m-6 p-2">
             {/* Left side: Product Selection */}
             <div className="w-full md:w-3/5 lg:w-2/3 flex flex-col">
-                <div className="p-4">
+                <div className="p-4 flex gap-2">
                     <input
                         type="text"
                         placeholder={t('sales.searchPlaceholder')}
@@ -583,6 +596,10 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full p-3 rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-800 focus:ring-primary-500 focus:border-primary-500"
                     />
+                    <Button variant="secondary" onClick={() => setIsScannerModalOpen(true)} className="flex items-center gap-2">
+                        <BarcodeIcon />
+                        <span className="hidden sm:inline">{t('sales.scanBarcode')}</span>
+                    </Button>
                 </div>
                 <div className="flex-grow overflow-y-auto p-4">
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -658,6 +675,12 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                     </div>
                 </div>
             </div>
+
+            {isScannerModalOpen && (
+                <Modal isOpen={isScannerModalOpen} onClose={() => setIsScannerModalOpen(false)} title={t('sales.scannerModalTitle')}>
+                    <BarcodeScanner onScanSuccess={handleScanSuccess} onClose={() => setIsScannerModalOpen(false)} />
+                </Modal>
+            )}
 
             {/* Payment Modal */}
             <Modal isOpen={isPaymentModalOpen} onClose={() => setIsPaymentModalOpen(false)} title={t('sales.finalizePayment')}>

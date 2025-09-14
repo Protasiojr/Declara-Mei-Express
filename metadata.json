@@ -1,5 +1,7 @@
 {
   "name": "Declara Mei Express",
   "description": "An application to help Micro-Entrepreneurs (MEI) in Brazil manage their business, track sales and services, and generate reports for their annual tax declaration.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }
