@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -25,6 +26,8 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
     const { t } = useTranslation();
     const [salesStartDate, setSalesStartDate] = useState('');
     const [salesEndDate, setSalesEndDate] = useState('');
+    const [financialStartDate, setFinancialStartDate] = useState('');
+    const [financialEndDate, setFinancialEndDate] = useState('');
 
     const handleExportSalesPDF = () => {
         const filteredSales = sales.filter(sale => {
@@ -385,19 +388,25 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
         doc.setFontSize(10);
         doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
 
-        const cashInflows = sales.flatMap(s => s.payments.filter(p => p.method !== 'On Account').map(p => ({
+        const filterByDate = (date: string) => {
+            if (financialStartDate && date < financialStartDate) return false;
+            if (financialEndDate && date > financialEndDate) return false;
+            return true;
+        }
+
+        const cashInflows = sales.filter(s => filterByDate(s.date)).flatMap(s => s.payments.filter(p => p.method !== 'On Account').map(p => ({
             date: s.date,
             description: `Venda #${s.id}`,
             amount: p.amount,
             type: 'in'
-        }))).concat(accountsReceivable.filter(ar => ar.status === 'Paid').map(ar => ({
+        }))).concat(accountsReceivable.filter(ar => ar.status === 'Paid' && filterByDate(ar.paymentDate!)).map(ar => ({
             date: ar.paymentDate!,
             description: `Recebimento Venda #${ar.saleId}`,
             amount: ar.amount,
             type: 'in'
         })));
 
-        const cashOutflows = accountsPayable.filter(ap => ap.status === 'Paid').map(ap => ({
+        const cashOutflows = accountsPayable.filter(ap => ap.status === 'Paid' && filterByDate(ap.paymentDate!)).map(ap => ({
             date: ap.paymentDate!,
             description: ap.description,
             amount: -ap.amount,
@@ -445,8 +454,17 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
         doc.setFontSize(10);
         doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
         
-        const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
-        const costOfGoodsSold = sales.reduce((sum, sale) => {
+        const filterByDate = (date: string) => {
+            if (financialStartDate && date < financialStartDate) return false;
+            if (financialEndDate && date > financialEndDate) return false;
+            return true;
+        }
+        
+        const filteredSales = sales.filter(s => filterByDate(s.date));
+        const filteredPayables = accountsPayable.filter(p => p.paymentDate && filterByDate(p.paymentDate));
+
+        const totalRevenue = filteredSales.reduce((sum, sale) => sum + sale.total, 0);
+        const costOfGoodsSold = filteredSales.reduce((sum, sale) => {
             return sum + sale.items.reduce((itemSum, saleItem) => {
                 if ('costPrice' in saleItem.item) {
                     return itemSum + (saleItem.item.costPrice * saleItem.quantity);
@@ -455,7 +473,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
             }, 0);
         }, 0);
         const grossProfit = totalRevenue - costOfGoodsSold;
-        const totalExpenses = accountsPayable.reduce((sum, expense) => sum + expense.amount, 0);
+        const totalExpenses = filteredPayables.reduce((sum, expense) => sum + expense.amount, 0);
         const netProfit = grossProfit - totalExpenses;
 
         const body = [
@@ -526,16 +544,31 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPaya
                      <div>
                         <h4 className="font-semibold text-lg">{t('reports.financialReports')}</h4>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.financialReportsDescription')}</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className='p-4 border dark:border-gray-700 rounded-lg'>
-                                <h5 className="font-semibold">{t('reports.cashFlowReport')}</h5>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.cashFlowReportDescription')}</p>
-                                <Button onClick={handleGenerateCashFlowPDF}>{t('reports.exportPdf')}</Button>
+                        <div className="p-4 border dark:border-gray-700 rounded-lg space-y-4">
+                            <div>
+                                <h5 className="font-semibold">{t('reports.filterByDate')}</h5>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                     <div>
+                                        <label htmlFor="financialStartDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterStartDate')}</label>
+                                        <input type="date" name="financialStartDate" value={financialStartDate} onChange={(e) => setFinancialStartDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
+                                    </div>
+                                    <div>
+                                        <label htmlFor="financialEndDate" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.filterEndDate')}</label>
+                                        <input type="date" name="financialEndDate" value={financialEndDate} onChange={(e) => setFinancialEndDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 focus:ring-primary-500 focus:border-primary-500"/>
+                                    </div>
+                                </div>
                             </div>
-                            <div className='p-4 border dark:border-gray-700 rounded-lg'>
-                                <h5 className="font-semibold">{t('reports.profitReport')}</h5>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.profitReportDescription')}</p>
-                                <Button onClick={handleGenerateProfitPDF}>{t('reports.exportPdf')}</Button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
+                                    <h5 className="font-semibold">{t('reports.cashFlowReport')}</h5>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.cashFlowReportDescription')}</p>
+                                    <Button onClick={handleGenerateCashFlowPDF}>{t('reports.exportPdf')}</Button>
+                                </div>
+                                <div className='p-4 bg-gray-50 dark:bg-gray-800 rounded-lg'>
+                                    <h5 className="font-semibold">{t('reports.profitReport')}</h5>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.profitReportDescription')}</p>
+                                    <Button onClick={handleGenerateProfitPDF}>{t('reports.exportPdf')}</Button>
+                                </div>
                             </div>
                         </div>
                     </div>

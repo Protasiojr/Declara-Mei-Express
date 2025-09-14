@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { AccountPayable, AccountReceivable, ExpenseCategory } from '../types';
 import Card from '../components/ui/Card';
@@ -31,11 +32,38 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
   const [formData, setFormData] = useState(initialFormState);
   const [errors, setErrors] = useState<any>({});
   
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Paid'>('All');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  
   const { totalPayable, totalReceivable } = useMemo(() => {
     const payable = accountsPayable.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
     const receivable = accountsReceivable.filter(r => r.status === 'Pending').reduce((sum, r) => sum + r.amount, 0);
     return { totalPayable: payable, totalReceivable: receivable };
   }, [accountsPayable, accountsReceivable]);
+
+  const filteredPayable = useMemo(() => {
+    return accountsPayable.filter(p => {
+        if (statusFilter !== 'All' && p.status !== statusFilter) return false;
+        const dateToCompare = p.status === 'Paid' ? p.paymentDate : p.dueDate;
+        if (!dateToCompare) return true;
+        if (startDate && dateToCompare < startDate) return false;
+        if (endDate && dateToCompare > endDate) return false;
+        return true;
+    }).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+  }, [accountsPayable, statusFilter, startDate, endDate]);
+
+  const filteredReceivable = useMemo(() => {
+    return accountsReceivable.filter(r => {
+        if (statusFilter !== 'All' && r.status !== statusFilter) return false;
+        const dateToCompare = r.status === 'Paid' ? r.paymentDate : r.dueDate;
+        if (!dateToCompare) return true;
+        if (startDate && dateToCompare < startDate) return false;
+        if (endDate && dateToCompare > endDate) return false;
+        return true;
+    }).sort((a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+  }, [accountsReceivable, statusFilter, startDate, endDate]);
 
 
   const validate = () => {
@@ -103,6 +131,12 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
     setFormData(prev => ({...prev, [name]: value }));
   };
   
+  const isOverdue = (item: AccountPayable | AccountReceivable) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    return item.status === 'Pending' && new Date(item.dueDate) < today;
+  };
+  
   const TabButton: React.FC<{tabId: 'payable' | 'receivable', title: string}> = ({tabId, title}) => (
         <button onClick={() => setActiveTab(tabId)} className={`px-4 py-2 text-sm font-medium rounded-t-lg ${activeTab === tabId ? 'border-b-2 border-primary-500 text-primary-600 dark:text-primary-400' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`}>
             {title}
@@ -138,11 +172,30 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
           </nav>
       </div>
 
+      <Card title={t('common.actions')}>
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="block text-sm font-medium">{t('financial.filterByStatus')}</label>
+            <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as any)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600">
+              <option value="All">{t('financial.all')}</option>
+              <option value="Pending">{t('financial.pending')}</option>
+              <option value="Paid">{t('financial.paid')}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">{t('sales.filterStartDate')}</label>
+            <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
+          </div>
+           <div>
+            <label className="block text-sm font-medium">{t('sales.filterEndDate')}</label>
+            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
+          </div>
+          {activeTab === 'payable' && <Button onClick={() => handleOpenModal()}>{t('financial.addExpense')}</Button>}
+        </div>
+      </Card>
+
       {activeTab === 'payable' ? (
         <Card title="">
-          <div className="flex justify-end mb-4">
-            <Button onClick={() => handleOpenModal()}>{t('financial.addExpense')}</Button>
-          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
               <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -156,9 +209,9 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
                 </tr>
               </thead>
               <tbody>
-                {accountsPayable.map(p => (
-                  <tr key={p.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    <td className="px-6 py-4 font-medium">{p.description}</td>
+                {filteredPayable.map(p => (
+                  <tr key={p.id} className={`border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${isOverdue(p) ? 'bg-red-50 dark:bg-red-900/20' : 'bg-white dark:bg-gray-800'}`}>
+                    <td className="px-6 py-4 font-medium">{p.description} {isOverdue(p) && <span className="text-xs text-red-500 ml-2">({t('financial.overdue')})</span>}</td>
                     <td className="px-6 py-4">{p.category}</td>
                     <td className="px-6 py-4">R$ {p.amount.toFixed(2)}</td>
                     <td className="px-6 py-4">{new Date(p.dueDate + 'T00:00:00').toLocaleDateString()}</td>
@@ -170,7 +223,7 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
                     </td>
                   </tr>
                 ))}
-                {accountsPayable.length === 0 && (<tr><td colSpan={6} className="text-center py-4">{t('financial.noPayable')}</td></tr>)}
+                {filteredPayable.length === 0 && (<tr><td colSpan={6} className="text-center py-4">{t('financial.noPayable')}</td></tr>)}
               </tbody>
             </table>
           </div>
@@ -190,9 +243,9 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
                 </tr>
               </thead>
               <tbody>
-                {accountsReceivable.map(r => (
-                  <tr key={r.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                    <td className="px-6 py-4 font-medium">{r.client.fullName}</td>
+                {filteredReceivable.map(r => (
+                  <tr key={r.id} className={`border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 ${isOverdue(r) ? 'bg-red-50 dark:bg-red-900/20' : 'bg-white dark:bg-gray-800'}`}>
+                    <td className="px-6 py-4 font-medium">{r.client.fullName} {isOverdue(r) && <span className="text-xs text-red-500 ml-2">({t('financial.overdue')})</span>}</td>
                     <td className="px-6 py-4">#{r.saleId}</td>
                     <td className="px-6 py-4">R$ {r.amount.toFixed(2)}</td>
                     <td className="px-6 py-4">{new Date(r.dueDate + 'T00:00:00').toLocaleDateString()}</td>
@@ -202,7 +255,7 @@ const FinancialPage: React.FC<FinancialPageProps> = ({ accountsPayable, setAccou
                     </td>
                   </tr>
                 ))}
-                {accountsReceivable.length === 0 && (<tr><td colSpan={6} className="text-center py-4">{t('financial.noReceivable')}</td></tr>)}
+                {filteredReceivable.length === 0 && (<tr><td colSpan={6} className="text-center py-4">{t('financial.noReceivable')}</td></tr>)}
               </tbody>
             </table>
           </div>

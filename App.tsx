@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import { Page, Product, Sale, AccountPayable, AccountReceivable } from './types';
 import Sidebar from './components/layout/Sidebar';
@@ -33,7 +34,7 @@ const App: React.FC = () => {
   const renderPage = () => {
     switch (currentPage) {
       case Page.Dashboard:
-        return <DashboardPage />;
+        return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} />;
       case Page.Employee:
         return <EmployeePage />;
       case Page.Client:
@@ -58,7 +59,7 @@ const App: React.FC = () => {
       case Page.Settings:
         return <SettingsPage handleLogout={handleLogout} />;
       default:
-        return <DashboardPage />;
+        return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} />;
     }
   };
   

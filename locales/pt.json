@@ -1,4 +1,5 @@
 
+
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -51,7 +52,11 @@
     "monthlyBilling": "Faturamento Mensal",
     "resales": "Revendas",
     "industrialized": "Prod. Industrializados",
-    "services": "Serviços"
+    "services": "Serviços",
+    "pendingPayable": "Contas a Pagar (Pendente)",
+    "pendingReceivable": "Contas a Receber (Pendente)",
+    "monthlyExpenses": "Despesas do Mês",
+    "monthlyProfit": "Lucro do Mês"
   },
   "employee": {
     "description": "O MEI pode ter no máximo um funcionário. Gerencie os dados aqui.",
@@ -164,7 +169,18 @@
     "insufficientStockError": "Estoque insuficiente para {productName}.",
     "dueDate": "Data de Vencimento",
     "dueDateRequired": "A data de vencimento é obrigatória para vendas a prazo.",
-    "onAccountPaymentFor": "Pagamento a prazo para {clientName}"
+    "onAccountPaymentFor": "Pagamento a prazo para {clientName}",
+    "filterStartDate": "Data Inicial",
+    "filterEndDate": "Data Final",
+    "cardPaymentTitle": "Pagamento com Cartão",
+    "cardNumber": "Número do Cartão",
+    "cardHolderName": "Nome do Titular",
+    "expiryDate": "Validade",
+    "cvv": "CVV",
+    "gatewayDisclaimer": "Atenção: Esta é uma tela de simulação. Não insira dados de cartão reais.",
+    "payAmount": "Pagar",
+    "processingPayment": "Processando...",
+    "paymentApproved": "Pagamento Aprovado!"
   },
   "products": {
     "title": "Produtos",
@@ -299,7 +315,8 @@
     "cogs": "Custo da Mercadoria Vendida (CMV)",
     "grossProfit": "Lucro Bruto",
     "operatingExpenses": "Despesas Operacionais",
-    "netProfit": "Lucro Líquido"
+    "netProfit": "Lucro Líquido",
+    "filterByDate": "Filtrar por Período"
   },
   "settings": {
     "general": "Configurações Gerais",
@@ -382,6 +399,10 @@
     "registerPayment": "Registrar Recebimento",
     "confirmReceivePayment": "Confirmar recebimento desta conta?",
     "paymentReceivedSuccess": "Recebimento registrado com sucesso.",
-    "saleId": "Venda ID"
+    "saleId": "Venda ID",
+    "filterByStatus": "Filtrar por Status",
+    "all": "Todos",
+    "filterByDate": "Filtrar por Período",
+    "overdue": "Vencido"
   }
 }

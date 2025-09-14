@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -41,6 +42,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [isOpeningModalOpen, setIsOpeningModalOpen] = useState(true);
     const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
     const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
+    const [isGatewayModalOpen, setIsGatewayModalOpen] = useState(false);
     const [lastSale, setLastSale] = useState<Sale | null>(null);
     
     // Form & Calculation States
@@ -54,6 +56,9 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [payments, setPayments] = useState<Payment[]>([]);
     const [cashTendered, setCashTendered] = useState<number | null>(null);
     const [onAccountDueDate, setOnAccountDueDate] = useState<string>('');
+    const [gatewayPaymentMethod, setGatewayPaymentMethod] = useState<PaymentMethod | null>(null);
+    const [gatewayAmount, setGatewayAmount] = useState(0);
+    const [isProcessingPayment, setIsProcessingPayment] = useState(false);
     
     useEffect(() => {
         const openSession = cashSessions.find(s => s.status === 'Open');
@@ -171,6 +176,13 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     
     const addPayment = (method: PaymentMethod) => {
         if (remainingAmount <= 0) return;
+
+        if (method === 'Credit Card' || method === 'Debit Card') {
+            setGatewayPaymentMethod(method);
+            setGatewayAmount(remainingAmount);
+            setIsGatewayModalOpen(true);
+            return;
+        }
 
         if (method === 'On Account') {
             if (!selectedClient) {
@@ -359,6 +371,19 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             setCountedBalance('');
             toast.success(t('cashControl.cashClosedSuccess'));
         }
+    }
+    
+    const handleGatewayPayment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsProcessingPayment(true);
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        if (gatewayPaymentMethod) {
+            setPayments(prev => [...prev, { method: gatewayPaymentMethod, amount: gatewayAmount }]);
+        }
+        setIsProcessingPayment(false);
+        setIsGatewayModalOpen(false);
+        toast.success(t('sales.paymentApproved'));
     }
 
     const generateReceiptPDF = (sale: Sale) => {
@@ -689,6 +714,36 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                         <Button onClick={handleFinalizeCloseCash}>{t('cashControl.confirmCloseCash')}</Button>
                     </div>
                 </div>
+            </Modal>
+
+            {/* Payment Gateway Modal */}
+            <Modal isOpen={isGatewayModalOpen} onClose={() => setIsGatewayModalOpen(false)} title={t('sales.cardPaymentTitle')}>
+                <form onSubmit={handleGatewayPayment} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium">{t('sales.cardNumber')}</label>
+                        <input type="text" placeholder="0000 0000 0000 0000" className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">{t('sales.cardHolderName')}</label>
+                        <input type="text" placeholder="Nome no Cartão" className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                         <div>
+                            <label className="block text-sm font-medium">{t('sales.expiryDate')}</label>
+                            <input type="text" placeholder="MM/AA" className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                        </div>
+                         <div>
+                            <label className="block text-sm font-medium">{t('sales.cvv')}</label>
+                            <input type="text" placeholder="123" className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700" />
+                        </div>
+                    </div>
+                    <p className="text-xs text-center text-gray-500">{t('sales.gatewayDisclaimer')}</p>
+                    <div className="flex justify-end pt-2">
+                        <Button type="submit" disabled={isProcessingPayment} className="w-full">
+                            {isProcessingPayment ? t('sales.processingPayment') : `${t('sales.payAmount')} R$ ${gatewayAmount.toFixed(2)}`}
+                        </Button>
+                    </div>
+                </form>
             </Modal>
         </div>
     );

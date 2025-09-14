@@ -1,9 +1,11 @@
 
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
+import { AccountPayable, AccountReceivable, Sale } from '../types';
 
 const faturamentoData = [
     { name: 'Jan', Faturamento: 4000 },
@@ -14,10 +16,53 @@ const faturamentoData = [
     { name: 'Jun', Faturamento: 5500 },
 ];
 
-const DashboardPage: React.FC = () => {
+interface DashboardPageProps {
+  sales: Sale[];
+  accountsPayable: AccountPayable[];
+  accountsReceivable: AccountReceivable[];
+}
+
+
+const DashboardPage: React.FC<DashboardPageProps> = ({ sales, accountsPayable, accountsReceivable }) => {
   type Period = 'daily' | 'monthly' | 'yearly';
   const { t } = useTranslation();
   const [period, setPeriod] = useState<Period>('daily');
+  
+  const { monthlyExpenses, monthlyProfit, pendingPayable, pendingReceivable } = useMemo(() => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    const currentMonthPayables = accountsPayable.filter(p => {
+        const paymentDate = p.paymentDate ? new Date(p.paymentDate + 'T00:00:00') : null;
+        return paymentDate && paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+    });
+    const monthlyExpenses = currentMonthPayables.reduce((sum, p) => sum + p.amount, 0);
+
+    const currentMonthSales = sales.filter(s => {
+        const saleDate = new Date(s.date + 'T00:00:00');
+        return saleDate.getMonth() === currentMonth && saleDate.getFullYear() === currentYear;
+    });
+    
+    const monthlyRevenue = currentMonthSales.reduce((sum, s) => sum + s.total, 0);
+    const monthlyCogs = currentMonthSales.reduce((sum, sale) => {
+        return sum + sale.items.reduce((itemSum, saleItem) => {
+            if ('costPrice' in saleItem.item) {
+                return itemSum + (saleItem.item.costPrice * saleItem.quantity);
+            }
+            return itemSum;
+        }, 0);
+    }, 0);
+    
+    const monthlyGrossProfit = monthlyRevenue - monthlyCogs;
+    const monthlyProfit = monthlyGrossProfit - monthlyExpenses;
+
+    const pendingPayable = accountsPayable.filter(p => p.status === 'Pending').reduce((sum, p) => sum + p.amount, 0);
+    const pendingReceivable = accountsReceivable.filter(r => r.status === 'Pending').reduce((sum, r) => sum + r.amount, 0);
+
+    return { monthlyExpenses, monthlyProfit, pendingPayable, pendingReceivable };
+  }, [sales, accountsPayable, accountsReceivable]);
+
 
   const data = {
     daily: [
@@ -53,6 +98,21 @@ const DashboardPage: React.FC = () => {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{t('sidebar.dashboard')}</h1>
       
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card title={t('dashboard.pendingPayable')}>
+              <p className="text-2xl font-bold text-red-500">R$ {pendingPayable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </Card>
+          <Card title={t('dashboard.pendingReceivable')}>
+              <p className="text-2xl font-bold text-green-500">R$ {pendingReceivable.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </Card>
+          <Card title={t('dashboard.monthlyExpenses')}>
+              <p className="text-2xl font-bold">R$ {monthlyExpenses.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </Card>
+          <Card title={t('dashboard.monthlyProfit')}>
+              <p className={`text-2xl font-bold ${monthlyProfit >= 0 ? 'text-blue-500' : 'text-orange-500'}`}>R$ {monthlyProfit.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </Card>
+      </div>
+
       <Card title={t('dashboard.annualBillingSummary')}>
         <div className="space-y-2">
             <p>{t('dashboard.meiLimit')}: R$ {totalFaturamentoAnual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
