@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -33,8 +32,8 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
-    // Cash Control State
-    const [currentCashSession, setCurrentCashSession] = useState<CashSession | null>(null);
+    // Cash Control State - Derived from props for consistency
+    const currentCashSession = useMemo(() => cashSessions.find(s => s.status === 'Open'), [cashSessions]);
 
     // Modal states
     const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -44,7 +43,10 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
     const [isClosingModalOpen, setIsClosingModalOpen] = useState(false);
     const [isGatewayModalOpen, setIsGatewayModalOpen] = useState(false);
+    const [isPostClosingModalOpen, setIsPostClosingModalOpen] = useState(false);
+    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
     const [lastSale, setLastSale] = useState<Sale | null>(null);
+    const [lastClosedSession, setLastClosedSession] = useState<CashSession | null>(null);
     
     // Form & Calculation States
     const [openingBalance, setOpeningBalance] = useState('');
@@ -52,6 +54,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [movementAmount, setMovementAmount] = useState('');
     const [movementDescription, setMovementDescription] = useState('');
     const [countedBalance, setCountedBalance] = useState('');
+    const [recipientEmail, setRecipientEmail] = useState('manager@example.com');
     
     // Payment states
     const [payments, setPayments] = useState<Payment[]>([]);
@@ -62,14 +65,12 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const [isProcessingPayment, setIsProcessingPayment] = useState(false);
     
     useEffect(() => {
-        const openSession = cashSessions.find(s => s.status === 'Open');
-        if (openSession) {
-            setCurrentCashSession(openSession);
+        if (currentCashSession) {
             setIsOpeningModalOpen(false);
         } else {
             setIsOpeningModalOpen(true);
         }
-    }, [cashSessions]);
+    }, [currentCashSession]);
 
 
     const availableItems: (Product | Service)[] = useMemo(() => [...products, ...services], [products, services]);
@@ -116,6 +117,30 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
         const expected = opening + sales + supplies - withdrawals;
         return { sales, supplies, withdrawals, expected };
     }, [currentCashSession]);
+
+    const emailContent = useMemo(() => {
+        if (!lastClosedSession) return { subject: '', body: '' };
+
+        const date = new Date(lastClosedSession.closedAt!).toLocaleDateString();
+        const subject = t('cashControl.emailSubjectTemplate', { date });
+        
+        const formatCurrency = (value: number) => `R$ ${value.toFixed(2)}`;
+
+        const body = [
+            t('cashControl.emailBodyTemplate.title'),
+            '------------------------------------',
+            t('cashControl.emailBodyTemplate.operator', { operatorName: lastClosedSession.operatorName }),
+            t('cashControl.emailBodyTemplate.openedAt', { time: new Date(lastClosedSession.openedAt).toLocaleString() }),
+            t('cashControl.emailBodyTemplate.closedAt', { time: new Date(lastClosedSession.closedAt!).toLocaleString() }),
+            '------------------------------------',
+            t('cashControl.emailBodyTemplate.openingBalance', { amount: formatCurrency(lastClosedSession.openingBalance) }),
+            t('cashControl.emailBodyTemplate.expectedBalance', { amount: formatCurrency(lastClosedSession.expectedBalance ?? 0) }),
+            t('cashControl.emailBodyTemplate.countedBalance', { amount: formatCurrency(lastClosedSession.closingBalance ?? 0) }),
+            t('cashControl.emailBodyTemplate.difference', { amount: formatCurrency(lastClosedSession.difference ?? 0) }),
+        ].join('\n');
+        
+        return { subject, body };
+    }, [lastClosedSession, t]);
 
     const addToCart = (item: Product | Service) => {
         setCart(currentCart => {
@@ -236,7 +261,13 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                 operatorName: user.name,
                 saleId: newSaleId
             };
-            setCurrentCashSession(prev => prev ? {...prev, transactions: [...prev.transactions, newTransaction]} : null);
+            setCashSessions(prevSessions =>
+                prevSessions.map(session =>
+                    session.id === currentCashSession.id
+                        ? { ...session, transactions: [...session.transactions, newTransaction] }
+                        : session
+                )
+            );
         }
 
         // 2. Update stock
@@ -317,7 +348,6 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             transactions: [openingTransaction]
         };
         setCashSessions(prev => [...prev, newSession]);
-        setCurrentCashSession(newSession);
         setIsOpeningModalOpen(false);
         setOpeningBalance('');
         toast.success(t('cashControl.cashOpenedSuccess'));
@@ -343,7 +373,13 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                 description: movementDescription,
                 operatorName: user.name
             };
-             setCurrentCashSession(prev => prev ? {...prev, transactions: [...prev.transactions, newTransaction]} : null);
+            setCashSessions(prevSessions =>
+                prevSessions.map(session =>
+                    session.id === currentCashSession.id
+                        ? { ...session, transactions: [...session.transactions, newTransaction] }
+                        : session
+                )
+            );
              toast.success(t('cashControl.movementSuccess'));
              setIsMovementModalOpen(false);
              setMovementAmount('');
@@ -367,16 +403,11 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                 expectedBalance: cashClosingTotals.expected,
                 difference: counted - cashClosingTotals.expected
             };
-            setCashSessions(prev => [...prev.filter(s => s.id !== closedSession.id), closedSession]);
-            setCurrentCashSession(null);
+            setCashSessions(prev => prev.map(s => (s.id === currentCashSession.id ? closedSession : s)));
+            setLastClosedSession(closedSession);
             setIsClosingModalOpen(false);
+            setIsPostClosingModalOpen(true);
             setCountedBalance('');
-            toast.info(t('cashControl.closingSummaryToast', {
-                expected: closedSession.expectedBalance?.toFixed(2) || '0.00',
-                counted: closedSession.closingBalance?.toFixed(2) || '0.00',
-                difference: closedSession.difference?.toFixed(2) || '0.00'
-            }));
-            setCurrentPage(Page.Dashboard);
         }
     }
     
@@ -444,6 +475,26 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const handleCloseOpeningModal = () => {
         toast.info(t('cashControl.operationCanceled'));
         setCurrentPage(Page.Dashboard);
+    };
+
+    const handleFinishClosing = () => {
+        setIsPostClosingModalOpen(false);
+        setCurrentPage(Page.Dashboard);
+    };
+
+    const handleSendByEmail = () => {
+        setIsEmailModalOpen(true);
+    };
+    
+    const handleConfirmSendEmail = () => {
+        const mailtoLink = `mailto:${recipientEmail}?subject=${encodeURIComponent(emailContent.subject)}&body=${encodeURIComponent(emailContent.body)}`;
+        window.location.href = mailtoLink;
+        setIsEmailModalOpen(false);
+        toast.info(t('cashControl.emailClientOpened'));
+    };
+
+    const handleSendByWhatsApp = () => {
+        toast.info(t('cashControl.summarySentByWhatsApp'));
     };
 
     if (!currentCashSession) {
@@ -756,6 +807,71 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                         </Button>
                     </div>
                 </form>
+            </Modal>
+            
+            {/* Post-Closing Modal */}
+            {lastClosedSession && (
+                <Modal isOpen={isPostClosingModalOpen} onClose={handleFinishClosing} title={t('cashControl.postClosingTitle')}>
+                    <div className="space-y-4">
+                        <h4 className="text-lg font-semibold text-center">{t('cashControl.closeCashSummary')}</h4>
+                        <div className="p-3 bg-gray-50 dark:bg-gray-900 rounded-md space-y-2 text-sm">
+                            <div className="flex justify-between"><span>{t('cashControl.expectedBalance')}</span> <span className="font-bold">R$ {lastClosedSession.expectedBalance?.toFixed(2)}</span></div>
+                            <div className="flex justify-between"><span>{t('cashControl.countedBalance')}</span> <span className="font-bold">R$ {lastClosedSession.closingBalance?.toFixed(2)}</span></div>
+                            <div className={`flex justify-between font-bold ${(lastClosedSession.difference ?? 0) !== 0 ? 'text-red-500' : 'text-green-500'}`}>
+                                <span>{t('cashControl.difference')}</span>
+                                <span>R$ {lastClosedSession.difference?.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        
+                        <p className="text-center text-gray-600 dark:text-gray-400 pt-4">{t('cashControl.postClosingDescription')}</p>
+
+                        <div className="grid grid-cols-1 gap-2">
+                            <Button variant="secondary" onClick={handleSendByEmail}>{t('cashControl.sendByEmail')}</Button>
+                            <Button variant="secondary" onClick={handleSendByWhatsApp}>{t('cashControl.sendByWhatsApp')}</Button>
+                        </div>
+                        <div className="flex justify-center pt-4">
+                            <Button onClick={handleFinishClosing}>{t('cashControl.finish')}</Button>
+                        </div>
+                    </div>
+                </Modal>
+            )}
+
+            {/* Email Summary Modal */}
+            <Modal isOpen={isEmailModalOpen} onClose={() => setIsEmailModalOpen(false)} title={t('cashControl.emailModalTitle')}>
+                <div className="space-y-4">
+                    <div>
+                        <label htmlFor="recipientEmail" className="block text-sm font-medium">{t('cashControl.recipientEmail')}</label>
+                        <input
+                            type="email"
+                            id="recipientEmail"
+                            value={recipientEmail}
+                            onChange={(e) => setRecipientEmail(e.target.value)}
+                            className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">{t('cashControl.emailSubject')}</label>
+                        <input
+                            type="text"
+                            value={emailContent.subject}
+                            disabled
+                            className="mt-1 block w-full rounded-md shadow-sm bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-600"
+                        />
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium">{t('cashControl.emailBody')}</label>
+                        <textarea
+                            value={emailContent.body}
+                            disabled
+                            rows={10}
+                            className="mt-1 block w-full rounded-md shadow-sm bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-600"
+                        />
+                    </div>
+                    <div className="flex justify-end pt-4 space-x-2">
+                        <Button variant="secondary" onClick={() => setIsEmailModalOpen(false)}>{t('common.cancel')}</Button>
+                        <Button onClick={handleConfirmSendEmail}>{t('cashControl.sendEmail')}</Button>
+                    </div>
+                </div>
             </Modal>
         </div>
     );

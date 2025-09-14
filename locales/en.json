@@ -1,4 +1,3 @@
-
 {
   "common": {
     "saveChanges": "Save Changes",
@@ -392,7 +391,31 @@
     "confirmCloseCash": "Confirm Closing",
     "cashClosedSuccess": "Cash register closed successfully!",
     "operationCanceled": "Operation canceled. Returning to dashboard.",
-    "closingSummaryToast": "Cash closed! Expected: R$ {{expected}}, Counted: R$ {{counted}}, Difference: R$ {{difference}}"
+    "closingSummaryToast": "Cash closed! Expected: R$ {{expected}}, Counted: R$ {{counted}}, Difference: R$ {{difference}}",
+    "postClosingTitle": "Cash Register Closed Successfully",
+    "postClosingDescription": "What would you like to do now?",
+    "sendByEmail": "Send Summary by Email",
+    "sendByWhatsApp": "Send Summary by WhatsApp",
+    "finish": "Finish",
+    "summarySentByEmail": "Summary sent to the manager's email.",
+    "summarySentByWhatsApp": "Summary sent to the manager's WhatsApp.",
+    "emailModalTitle": "Send Summary by Email",
+    "recipientEmail": "Recipient's Email",
+    "emailSubject": "Subject",
+    "emailBody": "Email Body",
+    "sendEmail": "Send Email",
+    "emailClientOpened": "Your email client has been opened to send the summary.",
+    "emailSubjectTemplate": "Cash Closing Summary - {{date}}",
+    "emailBodyTemplate": {
+      "title": "Cash Closing Summary",
+      "operator": "Operator: {{operatorName}}",
+      "openedAt": "Opened At: {{time}}",
+      "closedAt": "Closed At: {{time}}",
+      "openingBalance": "Opening Balance: {{amount}}",
+      "expectedBalance": "Expected Balance: {{amount}}",
+      "countedBalance": "Counted Balance: {{amount}}",
+      "difference": "Difference: {{amount}}"
+    }
   },
   "financial": {
     "title": "Financial Management",

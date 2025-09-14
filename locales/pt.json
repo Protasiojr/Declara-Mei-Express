@@ -1,4 +1,3 @@
-
 {
   "common": {
     "saveChanges": "Salvar Alterações",
@@ -392,7 +391,31 @@
     "confirmCloseCash": "Confirmar Fechamento",
     "cashClosedSuccess": "Caixa fechado com sucesso!",
     "operationCanceled": "Operação cancelada. Retornando ao dashboard.",
-    "closingSummaryToast": "Caixa fechado! Esperado: R$ {{expected}}, Contado: R$ {{counted}}, Diferença: R$ {{difference}}"
+    "closingSummaryToast": "Caixa fechado! Esperado: R$ {{expected}}, Contado: R$ {{counted}}, Diferença: R$ {{difference}}",
+    "postClosingTitle": "Caixa Fechado com Sucesso",
+    "postClosingDescription": "O que você gostaria de fazer agora?",
+    "sendByEmail": "Enviar Resumo por E-mail",
+    "sendByWhatsApp": "Enviar Resumo por WhatsApp",
+    "finish": "Finalizar",
+    "summarySentByEmail": "Resumo enviado para o e-mail do gestor.",
+    "summarySentByWhatsApp": "Resumo enviado para o WhatsApp do gestor.",
+    "emailModalTitle": "Enviar Resumo por E-mail",
+    "recipientEmail": "E-mail do Destinatário",
+    "emailSubject": "Assunto",
+    "emailBody": "Corpo do E-mail",
+    "sendEmail": "Enviar E-mail",
+    "emailClientOpened": "Seu cliente de e-mail foi aberto para enviar o resumo.",
+    "emailSubjectTemplate": "Resumo de Fechamento de Caixa - {{date}}",
+    "emailBodyTemplate": {
+      "title": "Resumo do Fechamento de Caixa",
+      "operator": "Operador: {{operatorName}}",
+      "openedAt": "Abertura: {{time}}",
+      "closedAt": "Fechamento: {{time}}",
+      "openingBalance": "Saldo Inicial: {{amount}}",
+      "expectedBalance": "Saldo Esperado: {{amount}}",
+      "countedBalance": "Saldo Contado: {{amount}}",
+      "difference": "Diferença: {{amount}}"
+    }
   },
   "financial": {
     "title": "Gestão Financeira",
