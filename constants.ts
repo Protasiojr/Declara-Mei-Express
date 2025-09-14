@@ -1,6 +1,9 @@
 
 
-import { User, Company, Employee, Product, Service, Sale, Client, ServiceProvision, Address } from './types';
+
+
+// FIX: Import the missing ServiceProvision type.
+import { User, Company, Employee, Product, Service, Sale, Client, Address, ServiceProvision } from './types';
 
 export const MOCK_USER: User = {
   name: 'Usuário Padrão',
@@ -105,13 +108,91 @@ export const MOCK_SERVICES: Service[] = [
 ];
 
 export const MOCK_SALES: Sale[] = [
-  { id: 1, item: MOCK_PRODUCTS[0], quantity: 2, total: 50.00, date: '2025-07-20', withInvoice: true, client: MOCK_CLIENTS[0] },
-  { id: 2, item: MOCK_SERVICES[1], quantity: 1, total: 80.00, date: '2025-07-19', withInvoice: false, client: MOCK_CLIENTS[1] },
-  { id: 3, item: MOCK_PRODUCTS[1], quantity: 10, total: 155.00, date: '2025-07-18', withInvoice: true, client: MOCK_CLIENTS[1] },
-  { id: 4, item: MOCK_PRODUCTS[2], quantity: 1, total: 30.00, date: '2025-07-15', withInvoice: false, client: null },
+  { 
+    id: 1, 
+    items: [
+        { item: MOCK_PRODUCTS[0], quantity: 2, unitPrice: 25.00, total: 50.00 }
+    ],
+    subtotal: 50.00,
+    discount: 0,
+    total: 50.00,
+    payments: [{ method: 'Credit Card', amount: 50.00 }],
+    changeDue: 0,
+    date: '2025-07-20', 
+    withInvoice: true, 
+    client: MOCK_CLIENTS[0] 
+  },
+  { 
+    id: 2, 
+    items: [
+        { item: MOCK_SERVICES[1], quantity: 1, unitPrice: 80.00, total: 80.00 }
+    ],
+    subtotal: 80.00,
+    discount: 0,
+    total: 80.00,
+    payments: [{ method: 'Cash', amount: 100.00 }],
+    changeDue: 20.00,
+    date: '2025-07-19', 
+    withInvoice: false, 
+    client: MOCK_CLIENTS[1] 
+  },
+  { 
+    id: 3, 
+    items: [
+        { item: MOCK_PRODUCTS[1], quantity: 10, unitPrice: 15.50, total: 155.00 }
+    ],
+    subtotal: 155.00,
+    discount: 0,
+    total: 155.00,
+    payments: [{ method: 'Pix', amount: 155.00 }],
+    changeDue: 0,
+    date: '2025-07-18', 
+    withInvoice: true, 
+    client: MOCK_CLIENTS[1] 
+  },
+  { 
+    id: 4, 
+    items: [
+        { item: MOCK_PRODUCTS[2], quantity: 1, unitPrice: 30.00, total: 30.00 },
+        { item: MOCK_PRODUCTS[0], quantity: 1, unitPrice: 25.00, total: 25.00 }
+    ],
+    subtotal: 55.00,
+    discount: 5.00,
+    total: 50.00,
+    payments: [{ method: 'Debit Card', amount: 50.00 }],
+    changeDue: 0,
+    date: '2025-07-15', 
+    withInvoice: false, 
+    client: null 
+  },
 ];
-
+// FIX: Add missing MOCK_SERVICE_PROVISIONS constant.
 export const MOCK_SERVICE_PROVISIONS: ServiceProvision[] = [
-    { id: 1, service: MOCK_SERVICES[0], quantity: 1, total: 150.00, date: '2025-07-22', withInvoice: true, client: MOCK_CLIENTS[1] },
-    { id: 2, service: MOCK_SERVICES[2], quantity: 1, total: 300.00, date: '2025-07-21', withInvoice: true, client: null }
+    {
+        id: 1,
+        service: MOCK_SERVICES[1], // Manutenção de Computador
+        quantity: 1,
+        total: 80.00,
+        date: '2025-07-21',
+        withInvoice: true,
+        client: MOCK_CLIENTS[1] // Construções ABC Ltda.
+    },
+    {
+        id: 2,
+        service: MOCK_SERVICES[0], // Consultoria de Marketing
+        quantity: 2,
+        total: 300.00,
+        date: '2025-07-20',
+        withInvoice: false,
+        client: MOCK_CLIENTS[2] // Joana Martins
+    },
+    {
+        id: 3,
+        service: MOCK_SERVICES[2], // Design Gráfico - Logotipo
+        quantity: 1,
+        total: 300.00,
+        date: '2025-07-15',
+        withInvoice: true,
+        client: null
+    }
 ];

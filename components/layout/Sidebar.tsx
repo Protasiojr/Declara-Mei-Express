@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Page } from '../../types';
-import { DashboardIcon, EmployeeIcon, ClientIcon, SalesIcon, ProductsIcon, ServicesIcon, CompanyIcon, ProfileIcon, ReportIcon, SettingsIcon } from '../icons';
+import { DashboardIcon, EmployeeIcon, ClientIcon, SalesIcon, ProductsIcon, CompanyIcon, ProfileIcon, ReportIcon, SettingsIcon } from '../icons';
 import { useTranslation } from '../../hooks/useTranslation';
 
 interface SidebarProps {
@@ -41,7 +41,6 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage }) => {
     { icon: <ClientIcon />, page: Page.Client, label: t('sidebar.clients') },
     { icon: <SalesIcon />, page: Page.Sales, label: t('sidebar.sales') },
     { icon: <ProductsIcon />, page: Page.Products, label: t('sidebar.products') },
-    { icon: <ServicesIcon />, page: Page.Services, label: t('sidebar.services') },
     { icon: <CompanyIcon />, page: Page.Company, label: t('sidebar.company') },
     { icon: <ProfileIcon />, page: Page.Profile, label: t('sidebar.profile') },
     { icon: <ReportIcon />, page: Page.Reports, label: t('sidebar.reports') },

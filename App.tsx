@@ -8,7 +8,6 @@ import EmployeePage from './pages/EmployeePage';
 import ClientPage from './pages/ClientPage';
 import SalesPage from './pages/SalesPage';
 import ProductsPage from './pages/ProductsPage';
-import ServicesPage from './pages/ServicesPage';
 import CompanyPage from './pages/CompanyPage';
 import ProfilePage from './pages/ProfilePage';
 import ReportsPage from './pages/ReportsPage';
@@ -34,8 +33,6 @@ const App: React.FC = () => {
         return <SalesPage />;
       case Page.Products:
         return <ProductsPage />;
-      case Page.Services:
-        return <ServicesPage />;
       case Page.Company:
         return <CompanyPage />;
       case Page.Profile:

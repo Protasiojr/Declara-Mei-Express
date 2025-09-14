@@ -1,12 +1,12 @@
 
 
+
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
   Client = 'Client',
   Sales = 'Sales',
   Products = 'Products',
-  Services = 'Services',
   Company = 'Company',
   Profile = 'Profile',
   Reports = 'Reports',
@@ -82,9 +82,10 @@ export interface Service {
   price: number;
 }
 
-export interface Sale {
+// FIX: Added missing ServiceProvision interface.
+export interface ServiceProvision {
   id: number;
-  item: Product | Service;
+  service: Service;
   quantity: number;
   total: number;
   date: string;
@@ -92,11 +93,28 @@ export interface Sale {
   client: Client | null;
 }
 
-export interface ServiceProvision {
-  id: number;
-  service: Service;
+export interface SaleItem {
+  item: Product | Service;
   quantity: number;
+  unitPrice: number; // Price at the time of sale
   total: number;
+}
+
+export type PaymentMethod = 'Cash' | 'Debit Card' | 'Credit Card' | 'Pix' | 'On Account';
+
+export interface Payment {
+  method: PaymentMethod;
+  amount: number;
+}
+
+export interface Sale {
+  id: number;
+  items: SaleItem[];
+  subtotal: number;
+  discount: number;
+  total: number;
+  payments: Payment[];
+  changeDue: number;
   date: string;
   withInvoice: boolean;
   client: Client | null;

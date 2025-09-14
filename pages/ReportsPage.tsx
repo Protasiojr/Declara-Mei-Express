@@ -4,7 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
-import { Sale, Client, Product, Address } from '../types';
+import { Sale, Client, Product, Address, Service } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -52,10 +52,10 @@ const ReportsPage: React.FC = () => {
         doc.text(dateRange, 14, 35);
 
         const head = [[
-            t('sales.item'),
-            t('sales.quantity'),
+            'ID',
             t('sales.date'),
             t('sales.client'),
+            t('sales.items'),
             t('sales.total')
         ]];
 
@@ -63,10 +63,10 @@ const ReportsPage: React.FC = () => {
         const body = filteredSales.map(sale => {
             totalAmount += sale.total;
             return [
-                sale.item.name,
-                sale.quantity,
+                sale.id,
                 new Date(sale.date + 'T00:00:00').toLocaleDateString(),
                 getClientDisplayName(sale.client),
+                sale.items.map(i => `${i.quantity}x ${i.item.name}`).join(', '),
                 `R$ ${sale.total.toFixed(2)}`
             ];
         });
@@ -195,16 +195,18 @@ const ReportsPage: React.FC = () => {
         let serviceRevenue = 0;
 
         MOCK_SALES.forEach(sale => {
-            if ('type' in sale.item) {
-                const product = sale.item as Product;
-                if (product.type === 'Regular') {
-                    resaleRevenue += sale.total;
-                } else if (product.type === 'Industrializado') {
-                    industrializedRevenue += sale.total;
+            sale.items.forEach(saleItem => {
+                const item = saleItem.item;
+                 if ('sku' in item) { // It's a Product
+                    if (item.type === 'Regular') {
+                        resaleRevenue += saleItem.total;
+                    } else if (item.type === 'Industrializado') {
+                        industrializedRevenue += saleItem.total;
+                    }
+                } else { // It's a Service
+                    serviceRevenue += saleItem.total;
                 }
-            } else {
-                serviceRevenue += sale.total;
-            }
+            });
         });
         
         const totalGrossRevenue = resaleRevenue + industrializedRevenue + serviceRevenue;
