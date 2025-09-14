@@ -2,28 +2,25 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User } from '../types';
+import { Sale, Product, Service, Client, SaleItem, Payment, PaymentMethod, CashSession, CashTransaction, User, AccountReceivable } from '../types';
 import { MOCK_SERVICES, MOCK_CLIENTS, MOCK_COMPANY, MOCK_USER, MOCK_CASH_SESSIONS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import { useToast } from '../context/ToastContext';
 import Modal from '../components/ui/Modal';
 import Button from '../components/ui/Button';
 
-// FIX: Accept props for state management
 interface SalesPageProps {
     products: Product[];
     setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
     sales: Sale[];
     setSales: React.Dispatch<React.SetStateAction<Sale[]>>;
+    setAccountsReceivable: React.Dispatch<React.SetStateAction<AccountReceivable[]>>;
 }
 
-const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales }) => {
+const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, setSales, setAccountsReceivable }) => {
     const { t } = useTranslation();
     const toast = useToast();
     
-    // Main data states managed by App.tsx
-    // const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
-    // const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
     const [services] = useState<Service[]>(MOCK_SERVICES);
     const [clients] = useState<Client[]>(MOCK_CLIENTS);
     const [user] = useState<User>(MOCK_USER);
@@ -56,9 +53,9 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     // Payment states
     const [payments, setPayments] = useState<Payment[]>([]);
     const [cashTendered, setCashTendered] = useState<number | null>(null);
+    const [onAccountDueDate, setOnAccountDueDate] = useState<string>('');
     
     useEffect(() => {
-        // On load, check for an already open session (e.g., from a previous browser session)
         const openSession = cashSessions.find(s => s.status === 'Open');
         if (openSession) {
             setCurrentCashSession(openSession);
@@ -148,6 +145,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             setPayments([]);
             setSelectedClient(null);
             setCashTendered(null);
+            setOnAccountDueDate('');
             toast.info(t('sales.saleCanceled'));
         });
     };
@@ -158,7 +156,6 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             return;
         }
 
-        // FIX: Add stock validation before proceeding to payment.
         for (const cartItem of cart) {
             if ('sku' in cartItem.item) { // Check stock only for products
                 const productInStock = products.find(p => p.id === cartItem.item.id);
@@ -175,11 +172,17 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
     const addPayment = (method: PaymentMethod) => {
         if (remainingAmount <= 0) return;
 
-        if (method === 'On Account' && !selectedClient) {
-            toast.error(t('sales.clientRequiredForOnAccount'));
-            return;
+        if (method === 'On Account') {
+            if (!selectedClient) {
+                toast.error(t('sales.clientRequiredForOnAccount'));
+                return;
+            }
+             if (!onAccountDueDate) {
+                toast.error(t('sales.dueDateRequired'));
+                return;
+            }
         }
-
+        
         setPayments(prev => [...prev, { method, amount: remainingAmount }]);
     };
     
@@ -188,12 +191,21 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
         if (paymentToRemove.method === 'Cash') {
             setCashTendered(null);
         }
+        if (paymentToRemove.method === 'On Account') {
+            setOnAccountDueDate('');
+        }
         setPayments(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleConfirmPayment = () => {
         if (remainingAmount > 0.001) { // Use a small epsilon for float comparison
             toast.error(t('sales.paymentNotCovered'));
+            return;
+        }
+        
+        const onAccountPayment = payments.find(p => p.method === 'On Account');
+        if (onAccountPayment && !onAccountDueDate) {
+            toast.error(t('sales.dueDateRequired'));
             return;
         }
 
@@ -242,6 +254,20 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
             client: selectedClient
         };
         
+        // 4. Create Account Receivable if applicable
+        if (onAccountPayment && selectedClient) {
+            const newReceivable: AccountReceivable = {
+                id: Date.now(),
+                saleId: newSale.id,
+                client: selectedClient,
+                amount: onAccountPayment.amount,
+                issueDate: newSale.date,
+                dueDate: onAccountDueDate,
+                status: 'Pending'
+            };
+            setAccountsReceivable(prev => [newReceivable, ...prev]);
+        }
+
         setSales(prev => [newSale, ...prev]);
         setLastSale(newSale);
 
@@ -249,6 +275,7 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
         setPayments([]);
         setCashTendered(null);
         setSelectedClient(null);
+        setOnAccountDueDate('');
         setIsPaymentModalOpen(false);
         setIsReceiptModalOpen(true);
         toast.success(t('sales.saleCompleted'));
@@ -531,7 +558,21 @@ const SalesPage: React.FC<SalesPageProps> = ({ products, setProducts, sales, set
                                 <option value="">{t('sales.clientTypeConsumer')}</option>
                                 {clients.map(c => <option key={c.id} value={c.id}>{c.fullName}</option>)}
                             </select>
-                             <Button variant='secondary' onClick={() => addPayment('On Account')} className="w-full mt-2" disabled={!selectedClient}>{t('sales.onAccount')}</Button>
+                             {selectedClient && !payments.some(p => p.method === 'On Account') && (
+                                <div className="mt-2 space-y-2 p-3 border dark:border-gray-600 rounded-md">
+                                    <p className="text-sm font-semibold">{t('sales.onAccountPaymentFor', { clientName: selectedClient.fullName })}</p>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('sales.dueDate')}</label>
+                                        <input
+                                            type="date"
+                                            value={onAccountDueDate}
+                                            onChange={e => setOnAccountDueDate(e.target.value)}
+                                            className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700"
+                                        />
+                                    </div>
+                                    <Button variant='secondary' onClick={() => addPayment('On Account')} className="w-full mt-2" disabled={!selectedClient}>{t('sales.onAccount')}</Button>
+                                </div>
+                             )}
                         </div>
                     </div>
                     

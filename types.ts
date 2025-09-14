@@ -1,13 +1,11 @@
 
-
-
-
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
   Client = 'Client',
   Sales = 'Sales',
   Products = 'Products',
+  Financial = 'Financial',
   Company = 'Company',
   Profile = 'Profile',
   Reports = 'Reports',
@@ -83,17 +81,6 @@ export interface Service {
   price: number;
 }
 
-// FIX: Add ServiceProvision interface for ServicesPage.
-export interface ServiceProvision {
-  id: number;
-  service: Service;
-  quantity: number;
-  total: number;
-  date: string;
-  withInvoice: boolean;
-  client: Client | null;
-}
-
 export interface SaleItem {
   item: Product | Service;
   quantity: number;
@@ -144,4 +131,27 @@ export interface CashSession {
   closedAt?: string;
   status: 'Open' | 'Closed';
   transactions: CashTransaction[];
+}
+
+export type ExpenseCategory = 'Fornecedores' | 'Aluguel' | 'Salário' | 'Impostos' | 'Marketing' | 'Outros';
+
+export interface AccountPayable {
+  id: number;
+  description: string;
+  category: ExpenseCategory;
+  amount: number;
+  dueDate: string;
+  paymentDate?: string;
+  status: 'Pending' | 'Paid';
+}
+
+export interface AccountReceivable {
+  id: number;
+  saleId: number;
+  client: Client;
+  amount: number;
+  issueDate: string;
+  dueDate: string;
+  paymentDate?: string;
+  status: 'Pending' | 'Paid';
 }

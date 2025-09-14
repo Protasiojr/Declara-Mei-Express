@@ -1,11 +1,5 @@
 
-
-
-
-
-
-// FIX: Import the ServiceProvision type.
-import { User, Company, Employee, Product, Service, Sale, Client, Address, CashSession, ServiceProvision } from './types';
+import { User, Company, Employee, Product, Service, Sale, Client, Address, CashSession, ExpenseCategory, AccountPayable, AccountReceivable } from './types';
 
 export const MOCK_USER: User = {
   name: 'Usuário Padrão',
@@ -109,37 +103,6 @@ export const MOCK_SERVICES: Service[] = [
   { id: 3, name: 'Design Gráfico - Logotipo', price: 300.00 },
 ];
 
-// FIX: Add MOCK_SERVICE_PROVISIONS for ServicesPage.
-export const MOCK_SERVICE_PROVISIONS: ServiceProvision[] = [
-    {
-        id: 1,
-        service: MOCK_SERVICES[0], // Consultoria de Marketing
-        quantity: 1,
-        total: 150.00,
-        date: '2025-07-15',
-        withInvoice: true,
-        client: MOCK_CLIENTS[1] // Construções ABC Ltda.
-    },
-    {
-        id: 2,
-        service: MOCK_SERVICES[2], // Design Gráfico - Logotipo
-        quantity: 1,
-        total: 300.00,
-        date: '2025-07-10',
-        withInvoice: true,
-        client: MOCK_CLIENTS[1] // Construções ABC Ltda.
-    },
-    {
-        id: 3,
-        service: MOCK_SERVICES[1], // Manutenção de Computador
-        quantity: 2,
-        total: 160.00,
-        date: '2025-06-28',
-        withInvoice: false,
-        client: MOCK_CLIENTS[0] // Carlos Pereira
-    }
-];
-
 export const MOCK_SALES: Sale[] = [
   { 
     id: 1, 
@@ -177,7 +140,7 @@ export const MOCK_SALES: Sale[] = [
     subtotal: 155.00,
     discount: 0,
     total: 155.00,
-    payments: [{ method: 'Pix', amount: 155.00 }],
+    payments: [{ method: 'On Account', amount: 155.00 }],
     changeDue: 0,
     date: '2025-07-18', 
     withInvoice: true, 
@@ -234,4 +197,18 @@ export const MOCK_CASH_SESSIONS: CashSession[] = [
              { id: 7, type: 'Sale', amount: 300.00, timestamp: '2025-07-21T14:00:00Z', description: 'Venda #103', operatorName: 'Usuário Padrão', saleId: 103 }
         ]
     }
+];
+
+export const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Fornecedores', 'Aluguel', 'Salário', 'Impostos', 'Marketing', 'Outros'];
+
+export const MOCK_ACCOUNTS_PAYABLE: AccountPayable[] = [
+    { id: 1, description: 'Compra de matéria-prima - Fornecedor X', category: 'Fornecedores', amount: 1250.00, dueDate: '2025-07-25', status: 'Pending' },
+    { id: 2, description: 'Aluguel do espaço comercial - Julho', category: 'Aluguel', amount: 800.00, dueDate: '2025-07-10', paymentDate: '2025-07-09', status: 'Paid' },
+    { id: 3, description: 'Salário funcionário - Julho', category: 'Salário', amount: 1500.00, dueDate: '2025-08-05', status: 'Pending' },
+    { id: 4, description: 'Imposto DAS - Competência Junho', category: 'Impostos', amount: 71.60, dueDate: '2025-07-20', paymentDate: '2025-07-18', status: 'Paid' },
+];
+
+export const MOCK_ACCOUNTS_RECEIVABLE: AccountReceivable[] = [
+    { id: 1, saleId: MOCK_SALES[2].id, client: MOCK_CLIENTS[1], amount: 155.00, issueDate: '2025-07-18', dueDate: '2025-08-18', status: 'Pending' },
+    { id: 2, saleId: 105, client: MOCK_CLIENTS[0], amount: 75.00, issueDate: '2025-06-15', dueDate: '2025-07-15', paymentDate: '2025-07-14', status: 'Paid' },
 ];

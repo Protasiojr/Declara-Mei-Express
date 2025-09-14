@@ -4,7 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import { MOCK_CLIENTS, MOCK_COMPANY, MOCK_CASH_SESSIONS } from '../constants';
-import { Sale, Client, Product, Address, SaleItem } from '../types';
+import { Sale, Client, Product, Address, AccountPayable, AccountReceivable } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -14,13 +14,14 @@ const formatAddress = (address: Address) => {
     return `${street}, ${number}${complement ? ` - ${complement}` : ''}, ${neighborhood}, ${city} - ${state}, ${zipCode}`;
 };
 
-// FIX: Accept props for state management
 interface ReportsPageProps {
     sales: Sale[];
     products: Product[];
+    accountsPayable: AccountPayable[];
+    accountsReceivable: AccountReceivable[];
 }
 
-const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
+const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products, accountsPayable, accountsReceivable }) => {
     const { t } = useTranslation();
     const [salesStartDate, setSalesStartDate] = useState('');
     const [salesEndDate, setSalesEndDate] = useState('');
@@ -44,7 +45,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
             ? `${t('reports.period')}: ${new Date(salesStartDate + 'T00:00:00').toLocaleDateString()} ${t('reports.to')} ${new Date(salesEndDate + 'T00:00:00').toLocaleDateString()}` 
             : t('reports.allSales');
         
-        // Header
         doc.setFontSize(10);
         doc.setTextColor(150);
         doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
@@ -107,7 +107,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         const { name: companyName, cnpj } = MOCK_COMPANY;
         const reportTitle = t('reports.clientListTitle');
         
-        // Header
         doc.setFontSize(10);
         doc.setTextColor(150);
         doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
@@ -143,7 +142,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         const doc = new jsPDF();
         const { name: companyName, cnpj } = MOCK_COMPANY;
 
-        // Header
         doc.setFontSize(10);
         doc.setTextColor(150);
         doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
@@ -193,7 +191,7 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
     const handleGenerateAnnualDeclarationPDF = () => {
         const doc = new jsPDF();
         const { name: companyName, entrepreneur, cnpj } = MOCK_COMPANY;
-        const year = "2025"; // Assuming fixed year from mock data
+        const year = "2025";
 
         let resaleRevenue = 0;
         let industrializedRevenue = 0;
@@ -202,13 +200,13 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         sales.forEach(sale => {
             sale.items.forEach(saleItem => {
                 const item = saleItem.item;
-                 if ('sku' in item) { // It's a Product
+                 if ('sku' in item) {
                     if (item.type === 'Regular') {
                         resaleRevenue += saleItem.total;
                     } else if (item.type === 'Industrializado') {
                         industrializedRevenue += saleItem.total;
                     }
-                } else { // It's a Service
+                } else {
                     serviceRevenue += saleItem.total;
                 }
             });
@@ -216,19 +214,16 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         
         const totalGrossRevenue = resaleRevenue + industrializedRevenue + serviceRevenue;
 
-        // Header
         doc.setFontSize(16);
         doc.text(t('reports.annualDeclarationTitle'), doc.internal.pageSize.getWidth() / 2, 15, { align: 'center' });
         doc.setFontSize(12);
         doc.text(`${t('reports.year')}: ${year}`, doc.internal.pageSize.getWidth() / 2, 22, { align: 'center' });
 
-        // Company Info
         doc.setFontSize(10);
         doc.text(`${t('company.companyName')}: ${companyName}`, 14, 35);
         doc.text(`${t('company.cnpj')}: ${cnpj}`, 14, 41);
         doc.text(`${t('company.entrepreneur')}: ${entrepreneur}`, 14, 47);
 
-        // Revenue Summary
         doc.setFontSize(14);
         doc.text(t('reports.annualSummary'), 14, 60);
 
@@ -302,12 +297,10 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         doc.save('relatorio_sessoes_caixa.pdf');
     };
 
-    // FIX: Add handlers for new inventory reports
     const handleGenerateProductTurnoverPDF = () => {
         const doc = new jsPDF();
         const { name: companyName, cnpj } = MOCK_COMPANY;
 
-        // Header
         doc.setFontSize(18);
         doc.text(t('reports.productTurnoverReportTitle'), 14, 22);
         doc.setFontSize(10);
@@ -335,7 +328,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         const bestSellers = sortedProducts.filter(p => p.quantitySold > 0);
         const deadStock = sortedProducts.filter(p => p.quantitySold === 0);
 
-        // Best Sellers Table
         doc.setFontSize(14);
         doc.text(t('reports.bestSellers'), 14, 35);
         autoTable(doc, {
@@ -346,7 +338,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
             headStyles: { fillColor: [22, 163, 74] }, // Green
         });
 
-        // Dead Stock Table
         if (deadStock.length > 0) {
             const finalY = (doc as any).lastAutoTable.finalY || 0;
             doc.setFontSize(14);
@@ -367,7 +358,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
         const doc = new jsPDF();
         const { name: companyName, cnpj } = MOCK_COMPANY;
 
-        // Header
         doc.setFontSize(18);
         doc.text(t('reports.lowStockReportTitle'), 14, 22);
         doc.setFontSize(10);
@@ -380,12 +370,117 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
             head: [[t('products.productName'), t('products.sku'), t('reports.currentStock'), t('reports.minStock')]],
             body: lowStockProducts.map(p => [p.name, p.sku, p.currentStock, p.minStock]),
             theme: 'striped',
-            headStyles: { fillColor: [217, 119, 6] }, // Amber
+            headStyles: { fillColor: [217, 119, 6] },
         });
 
         doc.save('relatorio_estoque_baixo.pdf');
     };
 
+    const handleGenerateCashFlowPDF = () => {
+        const doc = new jsPDF();
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+        
+        doc.setFontSize(18);
+        doc.text(t('reports.cashFlowReportTitle'), 14, 22);
+        doc.setFontSize(10);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+
+        const cashInflows = sales.flatMap(s => s.payments.filter(p => p.method !== 'On Account').map(p => ({
+            date: s.date,
+            description: `Venda #${s.id}`,
+            amount: p.amount,
+            type: 'in'
+        }))).concat(accountsReceivable.filter(ar => ar.status === 'Paid').map(ar => ({
+            date: ar.paymentDate!,
+            description: `Recebimento Venda #${ar.saleId}`,
+            amount: ar.amount,
+            type: 'in'
+        })));
+
+        const cashOutflows = accountsPayable.filter(ap => ap.status === 'Paid').map(ap => ({
+            date: ap.paymentDate!,
+            description: ap.description,
+            amount: -ap.amount,
+            type: 'out'
+        }));
+        
+        const transactions = [...cashInflows, ...cashOutflows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        let balance = 0;
+        const body = transactions.map(tx => {
+            balance += tx.amount;
+            return [
+                new Date(tx.date + 'T00:00:00').toLocaleDateString(),
+                tx.description,
+                tx.type === 'in' ? t('reports.inflow') : t('reports.outflow'),
+                `R$ ${Math.abs(tx.amount).toFixed(2)}`,
+                `R$ ${balance.toFixed(2)}`
+            ];
+        });
+
+        autoTable(doc, {
+            startY: 35,
+            head: [[t('sales.date'), t('financial.description'), t('reports.type'), t('financial.amount'), t('reports.balance')]],
+            body: body,
+            theme: 'striped',
+            headStyles: { fillColor: [29, 78, 216] },
+            didDrawCell: (data) => {
+                if (data.column.index === 2) {
+                    const text = data.cell.text[0];
+                    if (text === t('reports.inflow')) data.cell.styles.textColor = [0, 128, 0]; // Green
+                    if (text === t('reports.outflow')) data.cell.styles.textColor = [255, 0, 0]; // Red
+                }
+            }
+        });
+        
+        doc.save('relatorio_fluxo_caixa.pdf');
+    };
+    
+    const handleGenerateProfitPDF = () => {
+        const doc = new jsPDF();
+        const { name: companyName, cnpj } = MOCK_COMPANY;
+
+        doc.setFontSize(18);
+        doc.text(t('reports.profitReportTitle'), 14, 22);
+        doc.setFontSize(10);
+        doc.text(`${companyName} - CNPJ: ${cnpj}`, 14, 15);
+        
+        const totalRevenue = sales.reduce((sum, sale) => sum + sale.total, 0);
+        const costOfGoodsSold = sales.reduce((sum, sale) => {
+            return sum + sale.items.reduce((itemSum, saleItem) => {
+                if ('costPrice' in saleItem.item) {
+                    return itemSum + (saleItem.item.costPrice * saleItem.quantity);
+                }
+                return itemSum;
+            }, 0);
+        }, 0);
+        const grossProfit = totalRevenue - costOfGoodsSold;
+        const totalExpenses = accountsPayable.reduce((sum, expense) => sum + expense.amount, 0);
+        const netProfit = grossProfit - totalExpenses;
+
+        const body = [
+            [t('reports.totalGrossRevenue'), `R$ ${totalRevenue.toFixed(2)}`],
+            [`(-) ${t('reports.cogs')}`, `R$ ${costOfGoodsSold.toFixed(2)}`],
+            [`= ${t('reports.grossProfit')}`, `R$ ${grossProfit.toFixed(2)}`],
+            [`(-) ${t('reports.operatingExpenses')}`, `R$ ${totalExpenses.toFixed(2)}`],
+            [`= ${t('reports.netProfit')}`, `R$ ${netProfit.toFixed(2)}`],
+        ];
+        
+        autoTable(doc, {
+            startY: 35,
+            body: body,
+            theme: 'grid',
+            styles: { fontSize: 12 },
+            columnStyles: { 0: { fontStyle: 'bold' }, 1: { halign: 'right'} },
+            didParseCell: (data) => {
+                if (data.row.index === 4) {
+                    data.cell.styles.fontStyle = 'bold';
+                }
+            }
+        });
+
+        doc.save('demonstrativo_lucro.pdf');
+    }
 
     return (
         <div className="space-y-6">
@@ -409,7 +504,6 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
                         </div>
                     </div>
                     
-                    {/* FIX: Add new Inventory Reports section */}
                     <div className="border-t border-gray-200 dark:border-gray-700"></div>
                     <div>
                         <h4 className="font-semibold text-lg">{t('reports.inventoryReports')}</h4>
@@ -429,7 +523,24 @@ const ReportsPage: React.FC<ReportsPageProps> = ({ sales, products }) => {
                     </div>
 
                     <div className="border-t border-gray-200 dark:border-gray-700"></div>
+                     <div>
+                        <h4 className="font-semibold text-lg">{t('reports.financialReports')}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.financialReportsDescription')}</p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className='p-4 border dark:border-gray-700 rounded-lg'>
+                                <h5 className="font-semibold">{t('reports.cashFlowReport')}</h5>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.cashFlowReportDescription')}</p>
+                                <Button onClick={handleGenerateCashFlowPDF}>{t('reports.exportPdf')}</Button>
+                            </div>
+                            <div className='p-4 border dark:border-gray-700 rounded-lg'>
+                                <h5 className="font-semibold">{t('reports.profitReport')}</h5>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">{t('reports.profitReportDescription')}</p>
+                                <Button onClick={handleGenerateProfitPDF}>{t('reports.exportPdf')}</Button>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div className="border-t border-gray-200 dark:border-gray-700"></div>
                     <div>
                         <h4 className="font-semibold text-lg">{t('reports.cashSessionsReport')}</h4>
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{t('reports.cashSessionsReportDescription')}</p>

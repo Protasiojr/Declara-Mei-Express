@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Page, Product, Sale } from './types';
+import { Page, Product, Sale, AccountPayable, AccountReceivable } from './types';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -8,6 +8,7 @@ import EmployeePage from './pages/EmployeePage';
 import ClientPage from './pages/ClientPage';
 import SalesPage from './pages/SalesPage';
 import ProductsPage from './pages/ProductsPage';
+import FinancialPage from './pages/FinancialPage';
 import CompanyPage from './pages/CompanyPage';
 import ProfilePage from './pages/ProfilePage';
 import ReportsPage from './pages/ReportsPage';
@@ -15,8 +16,7 @@ import SettingsPage from './pages/SettingsPage';
 import LoginPage from './pages/LoginPage';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
-import { MOCK_PRODUCTS, MOCK_SALES } from './constants';
-import ServicesPage from './pages/ServicesPage';
+import { MOCK_PRODUCTS, MOCK_SALES, MOCK_ACCOUNTS_PAYABLE, MOCK_ACCOUNTS_RECEIVABLE } from './constants';
 
 const App: React.FC = () => {
   const { theme, toggleTheme } = useTheme();
@@ -26,6 +26,9 @@ const App: React.FC = () => {
   // Lifted state for data consistency across pages
   const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
   const [sales, setSales] = useState<Sale[]>(MOCK_SALES);
+  const [accountsPayable, setAccountsPayable] = useState<AccountPayable[]>(MOCK_ACCOUNTS_PAYABLE);
+  const [accountsReceivable, setAccountsReceivable] = useState<AccountReceivable[]>(MOCK_ACCOUNTS_RECEIVABLE);
+
 
   const renderPage = () => {
     switch (currentPage) {
@@ -36,18 +39,22 @@ const App: React.FC = () => {
       case Page.Client:
         return <ClientPage />;
       case Page.Sales:
-        // FIX: Pass lifted state and setters to SalesPage for consistent stock management.
-        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} />;
+        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} />;
       case Page.Products:
-         // FIX: Pass lifted state and setters to ProductsPage.
         return <ProductsPage products={products} setProducts={setProducts} />;
+      case Page.Financial:
+        return <FinancialPage 
+                  accountsPayable={accountsPayable}
+                  setAccountsPayable={setAccountsPayable}
+                  accountsReceivable={accountsReceivable}
+                  setAccountsReceivable={setAccountsReceivable}
+                />;
       case Page.Company:
         return <CompanyPage />;
       case Page.Profile:
         return <ProfilePage user={user} setUser={setUser} />;
       case Page.Reports:
-        // FIX: Pass lifted state to ReportsPage.
-        return <ReportsPage sales={sales} products={products} />;
+        return <ReportsPage sales={sales} products={products} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} />;
       case Page.Settings:
         return <SettingsPage handleLogout={handleLogout} />;
       default:
