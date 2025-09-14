@@ -1,6 +1,7 @@
 
+
 import React, { useState } from 'react';
-import { Page, Product, Sale, AccountPayable, AccountReceivable, StockMovement, CashSession } from './types';
+import { Page, Product, Sale, AccountPayable, AccountReceivable, StockMovement, CashSession, User } from './types';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import DashboardPage from './pages/DashboardPage';
@@ -30,6 +31,11 @@ const App: React.FC = () => {
   const [accountsReceivable, setAccountsReceivable] = useState<AccountReceivable[]>(MOCK_ACCOUNTS_RECEIVABLE);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>(MOCK_STOCK_MOVEMENTS);
   const [cashSessions, setCashSessions] = useState<CashSession[]>(MOCK_CASH_SESSIONS);
+  const [emailSettings, setEmailSettings] = useState({
+    managerEmail: 'gestor@email.com',
+    sendingEmail: '',
+    appPassword: '',
+  });
 
 
   const renderPage = () => {
@@ -41,7 +47,7 @@ const App: React.FC = () => {
       case Page.Client:
         return <ClientPage />;
       case Page.Sales:
-        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} setCurrentPage={setCurrentPage} cashSessions={cashSessions} setCashSessions={setCashSessions} />;
+        return <SalesPage products={products} setProducts={setProducts} sales={sales} setSales={setSales} setAccountsReceivable={setAccountsReceivable} setCurrentPage={setCurrentPage} cashSessions={cashSessions} setCashSessions={setCashSessions} emailSettings={emailSettings} />;
       case Page.Products:
         return <ProductsPage 
                   products={products} 
@@ -64,7 +70,7 @@ const App: React.FC = () => {
       case Page.Reports:
         return <ReportsPage sales={sales} products={products} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} />;
       case Page.Settings:
-        return <SettingsPage handleLogout={handleLogout} />;
+        return <SettingsPage handleLogout={handleLogout} emailSettings={emailSettings} setEmailSettings={setEmailSettings} />;
       default:
         return <DashboardPage sales={sales} accountsPayable={accountsPayable} accountsReceivable={accountsReceivable} cashSessions={cashSessions} />;
     }

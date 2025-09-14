@@ -346,7 +346,15 @@
     "logout": "Sair do Sistema",
     "logoutDescription": "Encerra sua sessão atual.",
     "logoutButton": "Sair do Sistema",
-    "logoutConfirm": "Tem certeza que deseja sair?"
+    "logoutConfirm": "Tem certeza que deseja sair?",
+    "emailSettingsTitle": "Configurações de E-mail",
+    "emailSettingsDescription": "Configure a conta do Google para enviar automaticamente o resumo de fechamento de caixa para o gestor.",
+    "managerEmail": "E-mail do Gestor",
+    "sendingEmail": "E-mail de Envio (Conta Google)",
+    "appPassword": "Senha de App do Google",
+    "appPasswordHelp": "Para permitir que o sistema envie e-mails de forma segura, crie e utilize uma 'Senha de App' na sua conta Google.",
+    "learnMore": "Saiba mais",
+    "emailSettingsSaved": "Configurações de e-mail salvas com sucesso!"
   },
   "validation": {
     "required": "Este campo é obrigatório.",
@@ -389,6 +397,7 @@
     "surplus": "Sobra",
     "shortage": "Falta",
     "confirmCloseCash": "Confirmar Fechamento",
+    "confirmAndSendEmail": "Confirmar e Enviar por Email",
     "cashClosedSuccess": "Caixa fechado com sucesso!",
     "operationCanceled": "Operação cancelada. Retornando ao dashboard.",
     "closingSummaryToast": "Caixa fechado! Esperado: R$ {{expected}}, Contado: R$ {{counted}}, Diferença: R$ {{difference}}",
@@ -405,6 +414,8 @@
     "emailBody": "Corpo do E-mail",
     "sendEmail": "Enviar E-mail",
     "emailClientOpened": "Seu cliente de e-mail foi aberto para enviar o resumo.",
+    "managerEmail": "E-mail do Gestor (Principal)",
+    "additionalEmails": "E-mails Adicionais (separados por vírgula)",
     "emailSubjectTemplate": "Resumo de Fechamento de Caixa - {{date}}",
     "emailBodyTemplate": {
       "title": "Resumo do Fechamento de Caixa",
