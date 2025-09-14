@@ -1,5 +1,7 @@
+
+
 import React, { useState } from 'react';
-import { Client } from '../types';
+import { Client, Address } from '../types';
 import { MOCK_CLIENTS } from '../constants';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -8,6 +10,15 @@ import Modal from '../components/ui/Modal';
 import { useToast } from '../context/ToastContext';
 
 type ClientFormData = Omit<Client, 'id'>;
+type FormErrors = Partial<Record<keyof Omit<ClientFormData, 'address'> | keyof Address, string>>;
+
+
+const formatAddress = (address: Address) => {
+    if (!address || !address.street) return '';
+    const { street, number, complement, neighborhood, city, state, zipCode } = address;
+    return `${street}, ${number}${complement ? ` - ${complement}` : ''}, ${neighborhood}, ${city} - ${state}, ${zipCode}`;
+};
+
 
 const ClientPage: React.FC = () => {
     const { t } = useTranslation();
@@ -20,24 +31,23 @@ const ClientPage: React.FC = () => {
     const initialFormData: ClientFormData = { 
         clientType: 'Individual',
         fullName: '', 
-        address: '', 
         phone: '', 
         cpf: '',
         companyName: '',
         tradeName: '',
         cnpj: '',
-        stateRegistration: ''
+        stateRegistration: '',
+        address: { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zipCode: '' }
     };
     const [formData, setFormData] = useState<ClientFormData>(initialFormData);
-    const [errors, setErrors] = useState<Partial<ClientFormData>>({});
+    const [errors, setErrors] = useState<FormErrors>({});
 
     const [justification, setJustification] = useState('');
     const [justificationError, setJustificationError] = useState('');
 
     const validate = () => {
-        const newErrors: Partial<ClientFormData> = {};
+        const newErrors: FormErrors = {};
         if (!formData.fullName.trim()) newErrors.fullName = t('validation.required');
-        if (!formData.address.trim()) newErrors.address = t('validation.required');
         if (!formData.phone.trim()) newErrors.phone = t('validation.required');
 
         if (formData.clientType === 'Individual') {
@@ -46,6 +56,14 @@ const ClientPage: React.FC = () => {
             if (!formData.companyName?.trim()) newErrors.companyName = t('validation.required');
             if (!formData.cnpj?.trim()) newErrors.cnpj = t('validation.required');
         }
+
+        if (!formData.address.street.trim()) newErrors.street = t('validation.required');
+        if (!formData.address.number.trim()) newErrors.number = t('validation.required');
+        if (!formData.address.neighborhood.trim()) newErrors.neighborhood = t('validation.required');
+        if (!formData.address.city.trim()) newErrors.city = t('validation.required');
+        if (!formData.address.state.trim()) newErrors.state = t('validation.required');
+        if (!formData.address.zipCode.trim()) newErrors.zipCode = t('validation.required');
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -55,7 +73,7 @@ const ClientPage: React.FC = () => {
         if (client) {
             setCurrentClient(client);
             setFormData({
-                ...initialFormData, // Start with defaults for any missing fields
+                ...initialFormData, 
                 ...client,
             });
         } else {
@@ -107,15 +125,37 @@ const ClientPage: React.FC = () => {
         setCurrentClient(null);
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        const addressKeys: (keyof Address)[] = ['street', 'number', 'complement', 'neighborhood', 'city', 'state', 'zipCode'];
+        if (addressKeys.includes(name as keyof Address)) {
+            setFormData(prev => ({...prev, address: {...prev.address, [name]: value }}));
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
     
     const handleClientTypeChange = (type: 'Individual' | 'Company') => {
         setErrors({});
-        setFormData(prev => ({...initialFormData, clientType: type, address: prev.address, phone: prev.phone}));
+        setFormData(prev => ({...initialFormData, clientType: type, phone: prev.phone}));
     }
+    
+    const renderInput = (name: keyof Omit<ClientFormData, 'address'>, label: string) => (
+        <div>
+            <label className="block text-sm font-medium">{label}</label>
+            <input type="text" name={name} value={formData[name] || ''} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors[name as keyof FormErrors] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+            {errors[name as keyof FormErrors] && <p className="text-sm text-red-500 mt-1">{errors[name as keyof FormErrors]}</p>}
+        </div>
+    );
+    
+    const renderAddressInput = (name: keyof Address, label: string, colSpan: string = 'col-span-2') => (
+        <div className={colSpan}>
+            <label className="block text-sm font-medium">{label}</label>
+            <input type="text" name={name} value={formData.address[name] || ''} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors[name as keyof FormErrors] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+            {errors[name as keyof FormErrors] && <p className="text-sm text-red-500 mt-1">{errors[name as keyof FormErrors]}</p>}
+        </div>
+    );
+
 
     return (
         <div className="space-y-6">
@@ -129,9 +169,8 @@ const ClientPage: React.FC = () => {
                         <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                             <tr>
                                 <th scope="col" className="px-6 py-3">{t('clients.nameOrCompany')}</th>
-                                <th scope="col" className="px-6 py-3">{t('clients.clientType')}</th>
-                                <th scope="col" className="px-6 py-3">{t('clients.document')}</th>
                                 <th scope="col" className="px-6 py-3">{t('clients.phone')}</th>
+                                <th scope="col" className="px-6 py-3">{t('clients.address')}</th>
                                 <th scope="col" className="px-6 py-3 text-right">{t('common.actions')}</th>
                             </tr>
                         </thead>
@@ -141,9 +180,8 @@ const ClientPage: React.FC = () => {
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         {client.clientType === 'Company' ? client.companyName : client.fullName}
                                     </td>
-                                    <td className="px-6 py-4">{client.clientType === 'Company' ? t('clients.company') : t('clients.individual')}</td>
-                                    <td className="px-6 py-4">{client.clientType === 'Company' ? client.cnpj : client.cpf}</td>
                                     <td className="px-6 py-4">{client.phone}</td>
+                                    <td className="px-6 py-4">{formatAddress(client.address)}</td>
                                     <td className="px-6 py-4 text-right space-x-2">
                                         <Button size="sm" variant="secondary" onClick={() => handleOpenModal(client)}>{t('common.edit')}</Button>
                                         <Button size="sm" variant="danger" onClick={() => handleDeleteClick(client)}>{t('common.delete')}</Button>
@@ -180,54 +218,31 @@ const ClientPage: React.FC = () => {
 
                     {formData.clientType === 'Individual' ? (
                         <>
-                            <div>
-                                <label className="block text-sm font-medium">{t('clients.fullName')}</label>
-                                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                                {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">{t('clients.cpf')}</label>
-                                <input type="text" name="cpf" value={formData.cpf} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                                {errors.cpf && <p className="text-sm text-red-500 mt-1">{errors.cpf}</p>}
-                            </div>
+                            {renderInput('fullName', t('clients.fullName'))}
+                            {renderInput('cpf', t('clients.cpf'))}
                         </>
                     ) : (
                         <>
-                            <div>
-                                <label className="block text-sm font-medium">{t('clients.companyName')}</label>
-                                <input type="text" name="companyName" value={formData.companyName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                                {errors.companyName && <p className="text-sm text-red-500 mt-1">{errors.companyName}</p>}
-                            </div>
-                             <div>
-                                <label className="block text-sm font-medium">{t('clients.tradeName')}</label>
-                                <input type="text" name="tradeName" value={formData.tradeName} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">{t('clients.cnpj')}</label>
-                                <input type="text" name="cnpj" value={formData.cnpj} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                                {errors.cnpj && <p className="text-sm text-red-500 mt-1">{errors.cnpj}</p>}
-                            </div>
-                             <div>
-                                <label className="block text-sm font-medium">{t('clients.stateRegistration')}</label>
-                                <input type="text" name="stateRegistration" value={formData.stateRegistration} onChange={handleInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium">{t('clients.contactPerson')}</label>
-                                <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                                {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName}</p>}
-                            </div>
+                            {renderInput('companyName', t('clients.companyName'))}
+                            {renderInput('tradeName', t('clients.tradeName'))}
+                            {renderInput('cnpj', t('clients.cnpj'))}
+                            {renderInput('stateRegistration', t('clients.stateRegistration'))}
+                            {renderInput('fullName', t('clients.contactPerson'))}
                         </>
                     )}
-
-                    <div>
-                        <label className="block text-sm font-medium">{t('clients.address')}</label>
-                        <input type="text" name="address" value={formData.address} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                         {errors.address && <p className="text-sm text-red-500 mt-1">{errors.address}</p>}
-                    </div>
-                     <div>
-                        <label className="block text-sm font-medium">{t('clients.phone')}</label>
-                        <input type="text" name="phone" value={formData.phone} onChange={handleInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
-                         {errors.phone && <p className="text-sm text-red-500 mt-1">{errors.phone}</p>}
+                    {renderInput('phone', t('clients.phone'))}
+                    
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('clients.address')}</h3>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                           {renderAddressInput('street', t('address.street'))}
+                           {renderAddressInput('number', t('address.number'), 'col-span-1')}
+                           {renderAddressInput('complement', t('address.complement'), 'col-span-1')}
+                           {renderAddressInput('neighborhood', t('address.neighborhood'))}
+                           {renderAddressInput('city', t('address.city'), 'col-span-1')}
+                           {renderAddressInput('state', t('address.state'), 'col-span-1')}
+                           {renderAddressInput('zipCode', t('address.zipCode'))}
+                        </div>
                     </div>
                     
                     <div className="flex justify-end space-x-2 pt-4">

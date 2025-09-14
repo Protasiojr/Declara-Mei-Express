@@ -1,7 +1,8 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Sale, Product, Service, Client } from '../types';
+import { Sale, Product, Service, Client, Address } from '../types';
 import { MOCK_SALES, MOCK_PRODUCTS, MOCK_SERVICES, MOCK_CLIENTS } from '../constants';
 import { useTranslation } from '../hooks/useTranslation';
 import Modal from '../components/ui/Modal';
@@ -16,7 +17,6 @@ type SaleFormData = {
 };
 
 type ClientFormData = Omit<Client, 'id'>;
-type NewItemFormData = { name: string; price: string; type: 'Regular' | 'Industrializado' };
 
 const SalesPage: React.FC = () => {
     const { t } = useTranslation();
@@ -56,11 +56,12 @@ const SalesPage: React.FC = () => {
     // New Client Modal State
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const initialClientFormData: ClientFormData = { 
-        clientType: 'Individual', fullName: '', address: '', phone: '', cpf: '',
-        companyName: '', tradeName: '', cnpj: '', stateRegistration: ''
+        clientType: 'Individual', fullName: '', phone: '', cpf: '',
+        companyName: '', tradeName: '', cnpj: '', stateRegistration: '',
+        address: { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zipCode: '' }
     };
     const [clientFormData, setClientFormData] = useState<ClientFormData>(initialClientFormData);
-    const [clientErrors, setClientErrors] = useState<Partial<ClientFormData>>({});
+    const [clientErrors, setClientErrors] = useState<Partial<Record<keyof Omit<ClientFormData, 'address'> | keyof Address, string>>>({});
     
     // Item Search State
     const [itemSearch, setItemSearch] = useState('');
@@ -69,8 +70,9 @@ const SalesPage: React.FC = () => {
     // New Item Modal State
     const [isNewItemModalOpen, setIsNewItemModalOpen] = useState(false);
     const [newItemType, setNewItemType] = useState<'product' | 'service'>('product');
-    const [newItemFormData, setNewItemFormData] = useState<NewItemFormData>({ name: '', price: '', type: 'Regular' });
-    const [newItemErrors, setNewItemErrors] = useState({ name: '', price: '' });
+    // FIX: Add sku to form data and errors to handle product creation correctly.
+    const [newItemFormData, setNewItemFormData] = useState({ name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado', sku: '' });
+    const [newItemErrors, setNewItemErrors] = useState({ name: '', price: '', sku: '' });
 
     const findItemByValue = (value: string): Product | Service | undefined => {
         const [type, idStr] = value.split('-');
@@ -263,20 +265,25 @@ const SalesPage: React.FC = () => {
 
     // Client Modal Functions
     const validateClient = () => {
-        const newErrors: Partial<ClientFormData> = {};
+        const newErrors: Partial<Record<keyof Omit<ClientFormData, 'address'> | keyof Address, string>> = {};
         if (!clientFormData.fullName.trim()) newErrors.fullName = t('validation.required');
-        if (!clientFormData.address.trim()) newErrors.address = t('validation.required');
         if (!clientFormData.phone.trim()) newErrors.phone = t('validation.required');
-
-        if (clientFormData.clientType === 'Individual') {
-            if (!clientFormData.cpf?.trim()) newErrors.cpf = t('validation.required');
-        } else {
+        if (clientFormData.clientType === 'Individual' && !clientFormData.cpf?.trim()) newErrors.cpf = t('validation.required');
+        if (clientFormData.clientType === 'Company') {
             if (!clientFormData.companyName?.trim()) newErrors.companyName = t('validation.required');
             if (!clientFormData.cnpj?.trim()) newErrors.cnpj = t('validation.required');
         }
+        if (!clientFormData.address.street.trim()) newErrors.street = t('validation.required');
+        if (!clientFormData.address.number.trim()) newErrors.number = t('validation.required');
+        if (!clientFormData.address.neighborhood.trim()) newErrors.neighborhood = t('validation.required');
+        if (!clientFormData.address.city.trim()) newErrors.city = t('validation.required');
+        if (!clientFormData.address.state.trim()) newErrors.state = t('validation.required');
+        if (!clientFormData.address.zipCode.trim()) newErrors.zipCode = t('validation.required');
+
         setClientErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
 
     const handleSaveNewClient = () => {
         if (!validateClient()) return;
@@ -291,12 +298,17 @@ const SalesPage: React.FC = () => {
     
     const handleClientTypeChange = (type: 'Individual' | 'Company') => {
         setClientErrors({});
-        setClientFormData(prev => ({...initialClientFormData, clientType: type, address: prev.address, phone: prev.phone}));
+        setClientFormData(prev => ({...initialClientFormData, clientType: type, phone: prev.phone}));
     }
 
     const handleClientInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setClientFormData(prev => ({ ...prev, [name]: value }));
+        const addressKeys: (keyof Address)[] = ['street', 'number', 'complement', 'neighborhood', 'city', 'state', 'zipCode'];
+        if (addressKeys.includes(name as keyof Address)) {
+            setClientFormData(prev => ({...prev, address: {...prev.address, [name]: value }}));
+        } else {
+            setClientFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
     
     const getClientDisplayName = (client: Client | null) => {
@@ -323,15 +335,15 @@ const SalesPage: React.FC = () => {
     
     const handleOpenNewItemModal = (type: 'product' | 'service') => {
         setNewItemType(type);
-        setNewItemFormData({ name: '', price: '', type: 'Regular' });
-        setNewItemErrors({ name: '', price: '' });
+        setNewItemFormData({ name: '', price: '', type: 'Regular', sku: '' });
+        setNewItemErrors({ name: '', price: '', sku: '' });
         setIsNewItemModalOpen(true);
     };
     
     const handleSaveNewItem = () => {
-        const { name, price } = newItemFormData;
+        const { name, price, sku } = newItemFormData;
         const priceNum = Number(price);
-        const newErrors = { name: '', price: '' };
+        const newErrors = { name: '', price: '', sku: '' };
         let isValid = true;
         if (!name.trim()) {
             newErrors.name = t('validation.required');
@@ -341,11 +353,15 @@ const SalesPage: React.FC = () => {
             newErrors.price = t('validation.invalidPrice');
             isValid = false;
         }
+        if (newItemType === 'product' && !sku.trim()) {
+            newErrors.sku = t('validation.required');
+            isValid = false;
+        }
         setNewItemErrors(newErrors);
         if (!isValid) return;
 
         if (newItemType === 'product') {
-            const newProduct: Product = { id: Date.now(), name, price: priceNum, type: newItemFormData.type };
+            const newProduct: Product = { id: Date.now(), sku, name, price: priceNum, type: newItemFormData.type };
             setProducts(prev => [newProduct, ...prev]);
             handleSelectItem({ value: `product-${newProduct.id}`, label: newProduct.name });
         } else {
@@ -355,6 +371,22 @@ const SalesPage: React.FC = () => {
         }
         setIsNewItemModalOpen(false);
     };
+    
+    const renderClientInput = (name: keyof Omit<ClientFormData, 'address'>, label: string) => (
+         <div>
+            <label className="block text-sm font-medium">{label}</label>
+            <input type="text" name={name} value={clientFormData[name] || ''} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors[name as keyof typeof clientErrors] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+            {clientErrors[name as keyof typeof clientErrors] && <p className="text-sm text-red-500 mt-1">{clientErrors[name as keyof typeof clientErrors]}</p>}
+        </div>
+    );
+    
+     const renderAddressInput = (name: keyof Address, label: string, colSpan: string = 'col-span-2') => (
+        <div className={colSpan}>
+            <label className="block text-sm font-medium">{label}</label>
+            <input type="text" name={name} value={clientFormData.address[name] || ''} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors[name as keyof typeof clientErrors] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+            {clientErrors[name as keyof typeof clientErrors] && <p className="text-sm text-red-500 mt-1">{clientErrors[name as keyof typeof clientErrors]}</p>}
+        </div>
+    );
 
 
     return (
@@ -540,20 +572,32 @@ const SalesPage: React.FC = () => {
                     </div>
                     {clientFormData.clientType === 'Individual' ? (
                         <>
-                            <div><label className="block text-sm font-medium">{t('clients.fullName')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
-                            <div><label className="block text-sm font-medium">{t('clients.cpf')}</label><input type="text" name="cpf" value={clientFormData.cpf} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cpf && <p className="text-sm text-red-500 mt-1">{clientErrors.cpf}</p>}</div>
+                            {renderClientInput('fullName', t('clients.fullName'))}
+                            {renderClientInput('cpf', t('clients.cpf'))}
                         </>
                     ) : (
                         <>
-                            <div><label className="block text-sm font-medium">{t('clients.companyName')}</label><input type="text" name="companyName" value={clientFormData.companyName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.companyName && <p className="text-sm text-red-500 mt-1">{clientErrors.companyName}</p>}</div>
-                            <div><label className="block text-sm font-medium">{t('clients.tradeName')}</label><input type="text" name="tradeName" value={clientFormData.tradeName} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
-                            <div><label className="block text-sm font-medium">{t('clients.cnpj')}</label><input type="text" name="cnpj" value={clientFormData.cnpj} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cnpj && <p className="text-sm text-red-500 mt-1">{clientErrors.cnpj}</p>}</div>
-                            <div><label className="block text-sm font-medium">{t('clients.stateRegistration')}</label><input type="text" name="stateRegistration" value={clientFormData.stateRegistration} onChange={handleClientInputChange} className="mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600" /></div>
-                            <div><label className="block text-sm font-medium">{t('clients.contactPerson')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
+                            {renderClientInput('companyName', t('clients.companyName'))}
+                            {renderClientInput('tradeName', t('clients.tradeName'))}
+                            {renderClientInput('cnpj', t('clients.cnpj'))}
+                            {renderClientInput('stateRegistration', t('clients.stateRegistration'))}
+                            {renderClientInput('fullName', t('clients.contactPerson'))}
                         </>
                     )}
-                    <div><label className="block text-sm font-medium">{t('clients.address')}</label><input type="text" name="address" value={clientFormData.address} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.address && <p className="text-sm text-red-500 mt-1">{clientErrors.address}</p>}</div>
-                    <div><label className="block text-sm font-medium">{t('clients.phone')}</label><input type="text" name="phone" value={clientFormData.phone} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.phone && <p className="text-sm text-red-500 mt-1">{clientErrors.phone}</p>}</div>
+                    {renderClientInput('phone', t('clients.phone'))}
+                    
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('clients.address')}</h3>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                           {renderAddressInput('street', t('address.street'))}
+                           {renderAddressInput('number', t('address.number'), 'col-span-1')}
+                           {renderAddressInput('complement', t('address.complement'), 'col-span-1')}
+                           {renderAddressInput('neighborhood', t('address.neighborhood'))}
+                           {renderAddressInput('city', t('address.city'), 'col-span-1')}
+                           {renderAddressInput('state', t('address.state'), 'col-span-1')}
+                           {renderAddressInput('zipCode', t('address.zipCode'))}
+                        </div>
+                    </div>
 
                     <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="secondary" onClick={() => setIsClientModalOpen(false)}>{t('common.cancel')}</Button>
@@ -570,6 +614,13 @@ const SalesPage: React.FC = () => {
                         <input type="text" value={newItemFormData.name} onChange={(e) => setNewItemFormData(p => ({...p, name: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
                         {newItemErrors.name && <p className="text-sm text-red-500 mt-1">{newItemErrors.name}</p>}
                     </div>
+                    {newItemType === 'product' && (
+                        <div>
+                            <label className="block text-sm font-medium">{t('products.sku')}</label>
+                            <input type="text" value={newItemFormData.sku} onChange={(e) => setNewItemFormData(p => ({...p, sku: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.sku ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>
+                            {newItemErrors.sku && <p className="text-sm text-red-500 mt-1">{newItemErrors.sku}</p>}
+                        </div>
+                    )}
                      <div>
                         <label className="block text-sm font-medium">{t('sales.itemPrice')}</label>
                         <input type="number" value={newItemFormData.price} onChange={(e) => setNewItemFormData(p => ({...p, price: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${newItemErrors.price ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`}/>

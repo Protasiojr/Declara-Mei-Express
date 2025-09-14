@@ -12,15 +12,15 @@ const ProductsPage: React.FC = () => {
     const [products, setProducts] = useState<Product[]>(MOCK_PRODUCTS);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
-    const [formData, setFormData] = useState({ name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado' });
-    const [errors, setErrors] = useState({ name: '', price: '' });
+    const [formData, setFormData] = useState({ name: '', price: '', type: 'Regular' as 'Regular' | 'Industrializado', sku: '' });
+    const [errors, setErrors] = useState({ name: '', price: '', sku: '' });
     const toast = useToast();
 
     const regularProducts = products.filter(p => p.type === 'Regular');
     const industrializedProducts = products.filter(p => p.type === 'Industrializado');
 
     const validate = () => {
-        const newErrors = { name: '', price: '' };
+        const newErrors = { name: '', price: '', sku: '' };
         let isValid = true;
         if (!formData.name.trim()) {
             newErrors.name = t('validation.required');
@@ -30,6 +30,10 @@ const ProductsPage: React.FC = () => {
             newErrors.price = t('validation.invalidPrice');
             isValid = false;
         }
+        if (!formData.sku.trim()) {
+            newErrors.sku = t('validation.required');
+            isValid = false;
+        }
         setErrors(newErrors);
         return isValid;
     };
@@ -37,12 +41,12 @@ const ProductsPage: React.FC = () => {
     const handleOpenModal = (product: Product | null = null) => {
         if (product) {
             setCurrentProduct(product);
-            setFormData({ name: product.name, price: String(product.price), type: product.type });
+            setFormData({ name: product.name, price: String(product.price), type: product.type, sku: product.sku });
         } else {
             setCurrentProduct(null);
-            setFormData({ name: '', price: '', type: 'Regular' });
+            setFormData({ name: '', price: '', type: 'Regular', sku: '' });
         }
-        setErrors({ name: '', price: '' });
+        setErrors({ name: '', price: '', sku: '' });
         setIsModalOpen(true);
     };
 
@@ -58,6 +62,7 @@ const ProductsPage: React.FC = () => {
             name: formData.name,
             price: Number(formData.price),
             type: formData.type,
+            sku: formData.sku,
         };
 
         if (currentProduct) {
@@ -90,11 +95,12 @@ const ProductsPage: React.FC = () => {
 
     const handleExportCSV = (data: Product[], filename: string) => {
         if (!data.length) return;
-        const headers = ['id', 'name', 'price', 'type'];
+        const headers = ['id', 'sku', 'name', 'price', 'type'];
         const csvContent = [
             headers.join(','),
             ...data.map(item => [
                 item.id,
+                `"${item.sku.replace(/"/g, '""')}"`,
                 `"${item.name.replace(/"/g, '""')}"`,
                 item.price,
                 item.type
@@ -117,6 +123,7 @@ const ProductsPage: React.FC = () => {
                 <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
+                            <th scope="col" className="px-6 py-3">{t('products.sku')}</th>
                             <th scope="col" className="px-6 py-3">{t('products.productName')}</th>
                             <th scope="col" className="px-6 py-3">{t('products.price')}</th>
                             <th scope="col" className="px-6 py-3 text-right">{t('products.actions')}</th>
@@ -125,6 +132,7 @@ const ProductsPage: React.FC = () => {
                     <tbody>
                         {productList.map(product => (
                             <tr key={product.id} className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
+                                <td className="px-6 py-4">{product.sku}</td>
                                 <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{product.name}</td>
                                 <td className="px-6 py-4">R$ {product.price.toFixed(2)}</td>
                                 <td className="px-6 py-4 text-right space-x-2">
@@ -135,7 +143,7 @@ const ProductsPage: React.FC = () => {
                         ))}
                          {productList.length === 0 && (
                             <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700">
-                                <td colSpan={3} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                <td colSpan={4} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                     {t('products.noProducts')}
                                 </td>
                             </tr>
@@ -167,6 +175,12 @@ const ProductsPage: React.FC = () => {
                         <input type="text" name="name" id="name" value={formData.name} onChange={handleInputChange}
                                className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500'}`} />
                         {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
+                    </div>
+                     <div>
+                        <label htmlFor="sku" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('products.sku')}</label>
+                        <input type="text" name="sku" id="sku" value={formData.sku} onChange={handleInputChange}
+                               className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${errors.sku ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-primary-500'}`} />
+                        {errors.sku && <p className="text-sm text-red-500 mt-1">{errors.sku}</p>}
                     </div>
                     <div>
                         <label htmlFor="price" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('products.price')}</label>

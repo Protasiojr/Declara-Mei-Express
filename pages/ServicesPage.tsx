@@ -1,5 +1,6 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
-import { Service, ServiceProvision, Client } from '../types';
+import { Service, ServiceProvision, Client, Address } from '../types';
 import { MOCK_SERVICES, MOCK_SERVICE_PROVISIONS, MOCK_CLIENTS } from '../constants';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -51,9 +52,13 @@ const ServicesPage: React.FC = () => {
     const [isClientModalOpen, setIsClientModalOpen] = useState(false);
     const [clientSearch, setClientSearch] = useState('');
     const [searchResults, setSearchResults] = useState<Client[]>([]);
-    const initialClientFormData: ClientFormData = { clientType: 'Individual', fullName: '', address: '', phone: '', cpf: '', companyName: '', tradeName: '', cnpj: '', stateRegistration: '' };
+    const initialClientFormData: ClientFormData = { 
+        clientType: 'Individual', fullName: '', phone: '', cpf: '',
+        companyName: '', tradeName: '', cnpj: '', stateRegistration: '',
+        address: { street: '', number: '', complement: '', neighborhood: '', city: '', state: '', zipCode: '' }
+    };
     const [clientFormData, setClientFormData] = useState<ClientFormData>(initialClientFormData);
-    const [clientErrors, setClientErrors] = useState<Partial<ClientFormData>>({});
+    const [clientErrors, setClientErrors] = useState<Partial<Record<keyof Omit<ClientFormData, 'address'> | keyof Address, string>>>({});
     
      useEffect(() => {
         if (serviceSearch.trim() === '') {
@@ -261,15 +266,21 @@ const ServicesPage: React.FC = () => {
 
     // --- Client Modal Functions (similar to SalesPage)
     const validateClient = () => {
-        const newErrors: Partial<ClientFormData> = {};
+        const newErrors: Partial<Record<keyof Omit<ClientFormData, 'address'> | keyof Address, string>> = {};
         if (!clientFormData.fullName.trim()) newErrors.fullName = t('validation.required');
-        if (!clientFormData.address.trim()) newErrors.address = t('validation.required');
         if (!clientFormData.phone.trim()) newErrors.phone = t('validation.required');
         if (clientFormData.clientType === 'Individual' && !clientFormData.cpf?.trim()) newErrors.cpf = t('validation.required');
         if (clientFormData.clientType === 'Company') {
             if (!clientFormData.companyName?.trim()) newErrors.companyName = t('validation.required');
             if (!clientFormData.cnpj?.trim()) newErrors.cnpj = t('validation.required');
         }
+        if (!clientFormData.address.street.trim()) newErrors.street = t('validation.required');
+        if (!clientFormData.address.number.trim()) newErrors.number = t('validation.required');
+        if (!clientFormData.address.neighborhood.trim()) newErrors.neighborhood = t('validation.required');
+        if (!clientFormData.address.city.trim()) newErrors.city = t('validation.required');
+        if (!clientFormData.address.state.trim()) newErrors.state = t('validation.required');
+        if (!clientFormData.address.zipCode.trim()) newErrors.zipCode = t('validation.required');
+
         setClientErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -281,6 +292,37 @@ const ServicesPage: React.FC = () => {
         handleSelectClient(newClient);
         setIsClientModalOpen(false);
     };
+    
+    const handleClientTypeChange = (type: 'Individual' | 'Company') => {
+        setClientErrors({});
+        setClientFormData(prev => ({...initialClientFormData, clientType: type, phone: prev.phone}));
+    }
+    
+     const handleClientInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        const addressKeys: (keyof Address)[] = ['street', 'number', 'complement', 'neighborhood', 'city', 'state', 'zipCode'];
+        if (addressKeys.includes(name as keyof Address)) {
+            setClientFormData(prev => ({...prev, address: {...prev.address, [name]: value }}));
+        } else {
+            setClientFormData(prev => ({ ...prev, [name]: value }));
+        }
+    };
+
+    const renderClientInput = (name: keyof Omit<ClientFormData, 'address'>, label: string) => (
+         <div>
+            <label>{label}</label>
+            <input type="text" name={name} value={clientFormData[name] || ''} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors[name as keyof typeof clientErrors] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+            {clientErrors[name as keyof typeof clientErrors] && <p className="text-sm text-red-500 mt-1">{clientErrors[name as keyof typeof clientErrors]}</p>}
+        </div>
+    );
+    
+     const renderAddressInput = (name: keyof Address, label: string, colSpan: string = 'col-span-2') => (
+        <div className={colSpan}>
+            <label className="block text-sm font-medium">{label}</label>
+            <input type="text" name={name} value={clientFormData.address[name] || ''} onChange={handleClientInputChange} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors[name as keyof typeof clientErrors] ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />
+            {clientErrors[name as keyof typeof clientErrors] && <p className="text-sm text-red-500 mt-1">{clientErrors[name as keyof typeof clientErrors]}</p>}
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -465,19 +507,32 @@ const ServicesPage: React.FC = () => {
              <Modal isOpen={isClientModalOpen} onClose={() => setIsClientModalOpen(false)} title={t('clients.addClient')}>
                  <div className="space-y-4">
                      <div className="flex gap-4">
-                        <label className="flex items-center"><input type="radio" name="clientType" checked={clientFormData.clientType === 'Individual'} onChange={() => setClientFormData({...initialClientFormData, clientType: 'Individual'})} /><span className="ml-2 text-sm">{t('clients.individual')}</span></label>
-                        <label className="flex items-center"><input type="radio" name="clientType" checked={clientFormData.clientType === 'Company'} onChange={() => setClientFormData({...initialClientFormData, clientType: 'Company'})} /><span className="ml-2 text-sm">{t('clients.company')}</span></label>
+                        <label className="flex items-center"><input type="radio" name="clientType" checked={clientFormData.clientType === 'Individual'} onChange={() => handleClientTypeChange('Individual')} /><span className="ml-2 text-sm">{t('clients.individual')}</span></label>
+                        <label className="flex items-center"><input type="radio" name="clientType" checked={clientFormData.clientType === 'Company'} onChange={() => handleClientTypeChange('Company')} /><span className="ml-2 text-sm">{t('clients.company')}</span></label>
                     </div>
                     {clientFormData.clientType === 'Individual' ? ( <>
-                        <div><label>{t('clients.fullName')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={(e) => setClientFormData(p=>({...p, fullName: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
-                        <div><label>{t('clients.cpf')}</label><input type="text" name="cpf" value={clientFormData.cpf} onChange={(e) => setClientFormData(p=>({...p, cpf: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.cpf ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cpf && <p className="text-sm text-red-500 mt-1">{clientErrors.cpf}</p>}</div>
+                        {renderClientInput('fullName', t('clients.fullName'))}
+                        {renderClientInput('cpf', t('clients.cpf'))}
                     </> ) : ( <>
-                        <div><label>{t('clients.companyName')}</label><input type="text" name="companyName" value={clientFormData.companyName} onChange={(e) => setClientFormData(p=>({...p, companyName: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.companyName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.companyName && <p className="text-sm text-red-500 mt-1">{clientErrors.companyName}</p>}</div>
-                        <div><label>{t('clients.cnpj')}</label><input type="text" name="cnpj" value={clientFormData.cnpj} onChange={(e) => setClientFormData(p=>({...p, cnpj: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.cnpj ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.cnpj && <p className="text-sm text-red-500 mt-1">{clientErrors.cnpj}</p>}</div>
-                        <div><label>{t('clients.contactPerson')}</label><input type="text" name="fullName" value={clientFormData.fullName} onChange={(e) => setClientFormData(p=>({...p, fullName: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.fullName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.fullName && <p className="text-sm text-red-500 mt-1">{clientErrors.fullName}</p>}</div>
+                        {renderClientInput('companyName', t('clients.companyName'))}
+                        {renderClientInput('tradeName', t('clients.tradeName'))}
+                        {renderClientInput('cnpj', t('clients.cnpj'))}
+                        {renderClientInput('stateRegistration', t('clients.stateRegistration'))}
+                        {renderClientInput('fullName', t('clients.contactPerson'))}
                     </> )}
-                    <div><label>{t('clients.address')}</label><input type="text" name="address" value={clientFormData.address} onChange={(e) => setClientFormData(p=>({...p, address: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.address ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.address && <p className="text-sm text-red-500 mt-1">{clientErrors.address}</p>}</div>
-                    <div><label>{t('clients.phone')}</label><input type="text" name="phone" value={clientFormData.phone} onChange={(e) => setClientFormData(p=>({...p, phone: e.target.value}))} className={`mt-1 block w-full rounded-md shadow-sm bg-gray-100 dark:bg-gray-700 ${clientErrors.phone ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'}`} />{clientErrors.phone && <p className="text-sm text-red-500 mt-1">{clientErrors.phone}</p>}</div>
+                    {renderClientInput('phone', t('clients.phone'))}
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">{t('clients.address')}</h3>
+                        <div className="grid grid-cols-2 gap-4 mt-2">
+                           {renderAddressInput('street', t('address.street'))}
+                           {renderAddressInput('number', t('address.number'), 'col-span-1')}
+                           {renderAddressInput('complement', t('address.complement'), 'col-span-1')}
+                           {renderAddressInput('neighborhood', t('address.neighborhood'))}
+                           {renderAddressInput('city', t('address.city'), 'col-span-1')}
+                           {renderAddressInput('state', t('address.state'), 'col-span-1')}
+                           {renderAddressInput('zipCode', t('address.zipCode'))}
+                        </div>
+                    </div>
                     <div className="flex justify-end space-x-2 pt-4">
                         <Button variant="secondary" onClick={() => setIsClientModalOpen(false)}>{t('common.cancel')}</Button>
                         <Button onClick={handleSaveNewClient}>{t('common.save')}</Button>

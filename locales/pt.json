@@ -59,6 +59,8 @@
     "fullName": "Nome Completo",
     "address": "Endereço",
     "phone": "Telefone",
+    "pis": "PIS",
+    "ctps": "CTPS",
     "registrationData": "Dados Cadastrais (PIS, CTPS, etc)",
     "registerButton": "Cadastrar Funcionário",
     "employeeData": "Dados do Funcionário",
@@ -66,6 +68,8 @@
     "nameLabel": "Nome",
     "addressLabel": "Endereço",
     "phoneLabel": "Telefone",
+    "pisLabel": "PIS",
+    "ctpsLabel": "CTPS",
     "registrationDataLabel": "Dados Cadastrais",
     "addEmployee": "Adicionar Funcionário",
     "editEmployee": "Editar Dados do Funcionário",
@@ -103,6 +107,15 @@
     "document": "Documento",
     "addSuccess": "Cliente adicionado com sucesso!",
     "updateSuccess": "Cliente atualizado com sucesso!"
+  },
+  "address": {
+    "street": "Rua / Logradouro",
+    "number": "Número",
+    "complement": "Complemento",
+    "neighborhood": "Bairro",
+    "city": "Cidade",
+    "state": "Estado",
+    "zipCode": "CEP"
   },
   "sales": {
     "title": "Vendas e Serviços Prestados",
@@ -150,6 +163,7 @@
     "deleteSuccess": "Venda excluída com sucesso!"
   },
   "products": {
+    "sku": "SKU / Código",
     "productName": "Nome do Produto",
     "price": "Preço",
     "actions": "Ações",

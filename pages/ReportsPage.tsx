@@ -4,9 +4,16 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { useTranslation } from '../hooks/useTranslation';
 import { MOCK_SALES, MOCK_CLIENTS, MOCK_COMPANY } from '../constants';
-import { Sale, Client, Product } from '../types';
+import { Sale, Client, Product, Address } from '../types';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+const formatAddress = (address: Address) => {
+    if (!address || !address.street) return '';
+    const { street, number, complement, neighborhood, city, state, zipCode } = address;
+    return `${street}, ${number}${complement ? ` - ${complement}` : ''}, ${neighborhood}, ${city} - ${state}, ${zipCode}`;
+};
+
 
 const ReportsPage: React.FC = () => {
     const { t } = useTranslation();
@@ -106,18 +113,14 @@ const ReportsPage: React.FC = () => {
 
         const head = [[
             t('clients.nameOrCompany'),
-            t('clients.clientType'),
-            t('clients.document'),
             t('clients.phone'),
             t('clients.address')
         ]];
         
         const body = MOCK_CLIENTS.map(client => [
             client.clientType === 'Company' ? (client.companyName || client.fullName) : client.fullName,
-            client.clientType === 'Company' ? t('clients.company') : t('clients.individual'),
-            client.clientType === 'Company' ? (client.cnpj || '-') : (client.cpf || '-'),
             client.phone,
-            client.address
+            formatAddress(client.address)
         ]);
         
         autoTable(doc, {

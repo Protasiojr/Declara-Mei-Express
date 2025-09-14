@@ -59,6 +59,8 @@
     "fullName": "Full Name",
     "address": "Address",
     "phone": "Phone",
+    "pis": "PIS",
+    "ctps": "CTPS",
     "registrationData": "Registration Data (PIS, CTPS, etc)",
     "registerButton": "Register Employee",
     "employeeData": "Employee Data",
@@ -66,6 +68,8 @@
     "nameLabel": "Name",
     "addressLabel": "Address",
     "phoneLabel": "Phone",
+    "pisLabel": "PIS",
+    "ctpsLabel": "CTPS",
     "registrationDataLabel": "Registration Data",
     "addEmployee": "Add Employee",
     "editEmployee": "Edit Employee Data",
@@ -103,6 +107,15 @@
     "document": "Document",
     "addSuccess": "Client added successfully!",
     "updateSuccess": "Client updated successfully!"
+  },
+  "address": {
+    "street": "Street / Address Line",
+    "number": "Number",
+    "complement": "Complement",
+    "neighborhood": "Neighborhood",
+    "city": "City",
+    "state": "State",
+    "zipCode": "ZIP Code"
   },
   "sales": {
     "title": "Sales and Services Provided",
@@ -150,6 +163,7 @@
     "deleteSuccess": "Sale deleted successfully!"
   },
   "products": {
+    "sku": "SKU / Code",
     "productName": "Product Name",
     "price": "Price",
     "actions": "Actions",

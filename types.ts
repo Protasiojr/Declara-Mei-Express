@@ -1,3 +1,5 @@
+
+
 export enum Page {
   Dashboard = 'Dashboard',
   Employee = 'Employee',
@@ -18,20 +20,31 @@ export interface User {
   profileType: 'Admin' | 'User';
 }
 
+export interface Address {
+  street: string;
+  number: string;
+  complement?: string;
+  neighborhood: string;
+  city: string;
+  state: string;
+  zipCode: string;
+}
+
 export interface Company {
   name: string;
   entrepreneur: string;
   cnpj: string;
   creationDate: string;
-  address: string;
+  address: Address;
 }
 
 export interface Employee {
   id: number;
   fullName: string;
-  address: string;
+  address: Address;
   phone: string;
-  registrationData: string;
+  pis: string;
+  ctps: string;
   vacationStart?: string;
   vacationEnd?: string;
 }
@@ -40,7 +53,7 @@ export interface Client {
   id: number;
   clientType: 'Individual' | 'Company';
   fullName: string; // Individual's name or Company's contact person
-  address: string;
+  address: Address;
   phone: string;
   cpf?: string;
   companyName?: string;
@@ -51,6 +64,7 @@ export interface Client {
 
 export interface Product {
   id: number;
+  sku: string;
   name: string;
   price: number;
   type: 'Regular' | 'Industrializado';
